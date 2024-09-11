@@ -1,11 +1,10 @@
 package frc.vision;
 
-public class Main {
-    public String getGreeting() {
-        return "Hello World!";
-    }
+import org.opencv.core.*;
 
+public class Main {
     public static void main(String[] args) {
-        System.out.println(new Main().getGreeting());
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        System.out.println("Running successfully :3");
     }
 }
