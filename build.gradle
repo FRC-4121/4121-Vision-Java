@@ -15,6 +15,7 @@ dependencies {
     implementation 'org.openpnp:opencv:4.6.0-0' // available for download up to 4.9.0 but APT only goes up to 4.6
     implementation 'edu.wpi.first.apriltag:apriltag-java:2024.3.2'
     implementation 'edu.wpi.first.ntcore:ntcore-java:2024.3.2'
+    implementation 'com.google.code.gson:gson:2.11.0'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
