@@ -1,7 +1,10 @@
+package frc.vision.camera;
+
 import java.util.ArrayList;
 
 // Bean for camera config
-class CameraConfig {
+public class CameraConfig {
+    public String type;
     public int width;
     public int height;
     public int fps;

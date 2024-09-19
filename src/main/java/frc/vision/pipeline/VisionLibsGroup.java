@@ -1,79 +1,85 @@
+package frc.vision.pipeline;
+
 import edu.wpi.first.networktables.NetworkTable;
+import frc.vision.camera.*;
+import frc.vision.process.*;
 import java.lang.Void;
 import java.util.Collection;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.opencv.core.Mat;
 
 // Vision library group to handle dispatch from a frame to running vision processors.
 // Should be fully asynchronous and non-blocking on an input.
-class VisionLibsGroup implements Consumer<Mat> {
+public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     static final int IDLE = 0;
     static final int RUNNING = 1;
     static final int READY = 2;
 
     Executor exec;
-    CameraConfig cfg;
     Mat lastFrame;
+    CameraBase lastHandle;
     Collection<VisionProcessor> procs;
     NetworkTable table;
-    Consumer<Mat> postProcess;
+    BiConsumer<Mat, ? super CameraBase> postProcess;
     CompletableFuture<Void> handle;
     AtomicInteger state;
     boolean visionDebug;
 
-    public VisionLibsGroup(CameraConfig cfg, Collection<VisionProcessor> procs, NetworkTable table, boolean visionDebug, Executor exec) {
-        this.cfg = cfg;
+    public VisionLibsGroup(Collection<VisionProcessor> procs, NetworkTable table, boolean visionDebug, Executor exec) {
         this.procs = procs;
         this.exec = exec;
         this.table = table;
         this.visionDebug = visionDebug;
 
         state = new AtomicInteger(IDLE);
-        postProcess = _mat -> {};
+        postProcess = (_mat, _h) -> {};
     }
 
-    public void setPostProcess(Consumer<Mat> callback) {
+    public void setPostProcess(BiConsumer<Mat, ? super CameraBase> callback) {
         postProcess = callback;
     }
 
-    public void accept(Mat frame) {
+    public void accept(Mat frame, CameraBase handle) {
         lastFrame = frame;
+        lastHandle = handle;
         if (state.compareAndSet(IDLE, RUNNING)) {
             scheduleSelf();
         } else {
             state.set(READY);
         }
     }
-    protected Stream<VisionProcessor> getLibs() {
-        return procs.stream().filter(proc -> cfg.vlibs.size() == 0 || cfg.vlibs.contains(proc.getName()));
+    protected Stream<VisionProcessor> getLibs(Collection<String> vlibs) {
+        return procs.stream().filter(proc -> vlibs.size() == 0 || vlibs.contains(proc.getName()));
     }
     protected void scheduleSelf() {
         Mat frame = lastFrame;
+        CameraBase cam = lastHandle;
         CompletableFuture<Void> future = CompletableFuture.allOf(
-            getLibs()
-                .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cfg), exec))
+            getLibs(cam.getConfig().vlibs)
+                .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam.getConfig(), handle), exec))
                 .toArray(size -> new CompletableFuture[size])
         );
         if (table != null || visionDebug) {
             future = future.thenCompose(_void -> {
-                Stream<CompletableFuture<Void>> tables = table == null
-                    ? Stream.empty()
-                    : getLibs()
-                        .map(proc -> CompletableFuture.runAsync(() -> proc.toNetworkTable(table), exec));
+                Stream<CompletableFuture<Void>> tables = Stream.empty();
+                if (table != null) {
+                    NetworkTable subTable = table.getSubTable(cam.getName());
+                    tables = getLibs(cam.getConfig().vlibs)
+                        .map(proc -> CompletableFuture.runAsync(() -> proc.toNetworkTable(table, cam), exec));
+                }
                 Stream<CompletableFuture<Void>> drawings = !visionDebug
                     ? Stream.empty()
-                    : getLibs()
-                        .map(proc -> CompletableFuture.runAsync(() -> proc.drawOnImage(frame), exec));
-                Stream<CompletableFuture<Void>> combined = Stream.concat(tables, drawings);
+                    : getLibs(cam.getConfig().vlibs)
+                        .map(proc -> CompletableFuture.runAsync(() -> proc.drawOnImage(frame, cam), exec));
                 return CompletableFuture.allOf(Stream.concat(tables, drawings).toArray(size -> new CompletableFuture[size]));
             });
         }
         handle = future
-            .thenApply(_void -> frame)
-            .thenAcceptAsync(postProcess, exec)
+            .thenAcceptAsync(_void -> postProcess.accept(frame, cam), exec)
             .thenRun(() -> {
                 synchronized(this) {
                     handle = null;

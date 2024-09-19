@@ -1,26 +1,38 @@
+package frc.vision.process;
+
 import edu.wpi.first.networktables.*;
+import frc.vision.camera.CameraConfig;
+import java.util.IdentityHashMap;
 import java.util.List;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 // Most vision processors find some kind of bounding rectangle around their objects.
-abstract class ObjectVisionProcessor extends VisionProcessor {
-    protected List<VisionObject> objects;
+public abstract class ObjectVisionProcessor extends VisionProcessor {
+    protected IdentityHashMap<Object, List<VisionObject>> objectMap;
+
     public Scalar rectColor;
-    ObjectVisionProcessor(String name) {
-        super(name);
-        rectColor = new Scalar(1.0, 0.0, 0.0);
+
+    protected ObjectVisionProcessor(String name) {
+        this(name, new Scalar(1.0, 0.0, 0.0));
     }
-    ObjectVisionProcessor(String name, Scalar color) {
+    protected ObjectVisionProcessor(String name, Scalar color) {
         super(name);
+        this.objectMap = new IdentityHashMap();
         rectColor = color;
     }
+
     // Process the input image into a list of objects
     protected abstract List<VisionObject> processObjects(Mat img, CameraConfig cfg);
-    public void process(Mat img, CameraConfig cfg) {
-        objects = processObjects(img, cfg);
+    
+    @Override
+    public void process(Mat img, CameraConfig cfg, Object handle) {
+        objectMap.put(handle, processObjects(img, cfg));
     }
-    public void toNetworkTable(NetworkTable table) {
+
+    @Override
+    public void toNetworkTable(NetworkTable table, Object handle) {
+        List<VisionObject> objects = objectMap.get(handle);
         int i = 0;
         int size = objects.size();
         long[] x = new long[size];
@@ -42,7 +54,10 @@ abstract class ObjectVisionProcessor extends VisionProcessor {
         table.putValue("o", NetworkTableValue.makeDoubleArray(o));
         table.putValue("len", NetworkTableValue.makeInteger(size));
     }
-    public void drawOnImage(Mat img) {
+
+    @Override
+    public void drawOnImage(Mat img, Object handle) {
+        List<VisionObject> objects = objectMap.get(handle);
         for (VisionObject obj : objects) {
             Imgproc.rectangle(img, obj.tl(), obj.br(), rectColor, 1);
         }

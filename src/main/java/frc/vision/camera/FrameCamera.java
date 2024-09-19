@@ -1,28 +1,69 @@
+package frc.vision.camera;
+
 import java.io.FileNotFoundException;
 import java.util.Calendar;
 import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-class FrameCamera extends CameraBase {
-    FrameCamera(String name, Mat img, Calendar date) throws FileNotFoundException {
-        super(name, date);
-        frame = new Mat();
-        Imgproc.resize(img, frame, new Size(config.width, config.height));
+public class FrameCamera extends CameraBase {
+    protected Mat thisFrame;
+    public FrameCamera(String name, Mat img, Config cfg, Calendar date) throws FileNotFoundException {
+        super(name, cfg, date);
+        Imgproc.resize(img, thisFrame, new Size(config.width, config.height));
     }
-    FrameCamera(String name, Mat img) throws FileNotFoundException {
-        super(name);
-        frame = new Mat();
-        Imgproc.resize(img, frame, new Size(config.width, config.height));
+    public FrameCamera(String name, Mat img, Config cfg) throws FileNotFoundException {
+        this(name, img, cfg, Calendar.getInstance());
     }
-    FrameCamera(String name, int type, Calendar date) throws FileNotFoundException {
-        super(name, date);
-        frame = new Mat(new Size(config.height, config.height), type, new Scalar(0));
+    public FrameCamera(String name, int type, Config cfg, Calendar date) throws FileNotFoundException {
+        super(name, cfg, date);
+        Size size = new Size(config.height, config.height);
+        try {
+            if (cfg.filePath != null) {
+                Mat img = Imgcodecs.imread(cfg.filePath);
+                Imgproc.resize(img, thisFrame, size);
+            }
+        }
+        finally {
+            if (thisFrame == null) {
+                thisFrame = new Mat(size, type, new Scalar(0));
+            }
+        }
     }
-    FrameCamera(String name, int type) throws FileNotFoundException {
-        super(name);
-        frame = new Mat(new Size(config.width, config.height), type, new Scalar(0));
+    public FrameCamera(String name, int type, Config cfg) throws FileNotFoundException {
+        this(name, type, cfg, Calendar.getInstance());
     }
+    public FrameCamera(String name, Config cfg, Calendar date) throws FileNotFoundException {
+        this(name, CvType.CV_8U, cfg, date);
+    }
+    public FrameCamera(String name, Config cfg) throws FileNotFoundException {
+        this(name, CvType.CV_8U, cfg);
+    }
+
+    @Override
     protected Mat readFrameRaw() {
-        return frame;
+        thisFrame.copyTo(frame);
+        return this.frame;
+    }
+
+    public static class Config extends CameraConfig {
+        String filePath;
+    }
+
+    public static class Factory extends CameraFactory {
+        @Override
+        public Class<Config> configType() {
+            return Config.class;
+        }
+
+        @Override
+        public String typeName() {
+            return "frame";
+        }
+
+        @Override
+        public FrameCamera create(String name, CameraConfig cfg, Calendar date) throws FileNotFoundException {
+            return new FrameCamera(name, (Config)cfg, date);
+        }
     }
 }

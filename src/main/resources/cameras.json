@@ -1,0 +1,9 @@
+{
+    "dummy": {
+        "width": 640,
+        "height": 480,
+        "fov": 40,
+        "fps": 60,
+        "type": "frame"
+    }
+}

@@ -1,35 +1,44 @@
+package frc.vision.pipeline;
+
+import frc.vision.camera.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.opencv.core.Mat;
 
 // A camera thread that runs the camera as fast as possible, with the option to get futures to the result.
-class AsyncCameraThread extends Thread {
+public class AsyncCameraThread extends Thread {
     // The camera that we want to loop on.
-    CameraBase cam;
+    protected CameraBase cam;
     // True if the most recent frame is unprocessed.
-    AtomicBoolean ready;
+    protected AtomicBoolean ready;
     // A callback that can be run after each frame.
-    Consumer<Mat> afterFrame;
+    protected BiConsumer<Mat, ? super CameraBase> afterFrame;
     // Queue of futures to be run.
-    ConcurrentLinkedQueue<CompletableFuture<Mat>> futures;
+    protected ConcurrentLinkedQueue<CompletableFuture<Mat>> futures;
 
     // Create a new thread with the given camera.
-    AsyncCameraThread(CameraBase camera) {
+    public AsyncCameraThread(CameraBase camera) {
         cam = camera;
         ready = new AtomicBoolean();
-        afterFrame = _mat -> {};
+        afterFrame = (_mat, _cam) -> {};
         futures = new ConcurrentLinkedQueue();
     }
 
-    // Get the callback to be run after each frame.
-    public Consumer<Mat> getCallback() {
-        return afterFrame;
+    // Set a new callback to be run after each frame.
+    public void setSingleCallback(Consumer<Mat> callback) {
+        afterFrame = (mat, _cam) -> callback.accept(mat);
     }
 
     // Set a new callback to be run after each frame.
-    public void setCallback(Consumer<Mat> callback) {
+    public void setCallback(BiConsumer<Mat, ? super CameraBase> callback) {
         afterFrame = callback;
+    }
+
+    // Get the camera being run in this thread.
+    public CameraBase getCamera() {
+        return cam;
     }
 
     // Get a future to the most recent frame.
@@ -37,7 +46,7 @@ class AsyncCameraThread extends Thread {
     public CompletableFuture<Mat> getFuture() {
         // this cmpxchg checks to see if there's a ready frame and if so, sets it to false.
         if (ready.compareAndExchange(true, false)) {
-            return CompletableFuture.completedFuture(cam.frame.clone());
+            return CompletableFuture.completedFuture(cam.getFrame().clone());
         }
         // if none was available, add a future to the queue and return it.
         CompletableFuture<Mat> result = new CompletableFuture();
@@ -48,7 +57,7 @@ class AsyncCameraThread extends Thread {
     // Run a single frame.
     public void runSingle() {
         cam.run();
-        afterFrame.accept(cam.frame);
+        afterFrame.accept(cam.getFrame(), cam);
         // After we've got a frame, we see if a future's waiting.
         CompletableFuture<Mat> future = null;
         do {
@@ -59,7 +68,7 @@ class AsyncCameraThread extends Thread {
                 return;
             }
             // try to complete the future, but if it was cancelled or already completed for some other reason, we loop and check for the next one.
-        } while (!future.complete(cam.frame));
+        } while (!future.complete(cam.getFrame()));
     }
 
     public void run() {
