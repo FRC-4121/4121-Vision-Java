@@ -22,8 +22,8 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
     // Writer to log debug information and exceptions.
     protected PrintWriter log;
 
-    public static File logDir = new File("logs");
-    private static final String logNameFormat = "log_%s_%04%02%02_%02%02%02.txt";
+    public static File logDir = new File("logs/cam");
+    private static final String logNameFormat = "log_%s_%04d%02d%02d_%02d%02d%02d.txt";
 
 
     protected CameraBase(String name, CameraConfig cfg) throws FileNotFoundException {

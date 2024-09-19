@@ -1,6 +1,7 @@
 package frc.vision.camera;
 
 import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import java.lang.Class;
 import java.lang.reflect.Type;
 import java.io.FileNotFoundException;
@@ -24,6 +25,7 @@ public class CameraLoader {
     }
 
     protected static class CustomDeserializer implements JsonDeserializer<WrappedConfig> {
+        @Override
         public WrappedConfig deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
             JsonObject obj = json.getAsJsonObject();
             String ty = obj.get("type").getAsString();
@@ -40,7 +42,7 @@ public class CameraLoader {
         Gson gson = new GsonBuilder()
             .registerTypeAdapter(WrappedConfig.class, new CustomDeserializer())
             .create();
-        configs = gson.fromJson(file, HashMap.class);
+        configs = gson.fromJson(file, new TypeToken<HashMap<String, WrappedConfig>>() {}.getType());
         
         for (Map.Entry<String, WrappedConfig> entry : configs.entrySet()) {
             if (entry.getKey() == "default") continue;
@@ -68,7 +70,8 @@ public class CameraLoader {
     // Load a camera with the given name.
     // TODO: give better exceptions.
     public static CameraBase load(String name, Calendar date) throws FileNotFoundException {
-        CameraConfig cfg = configs.get(name).inner;
+        WrappedConfig wcfg = configs.get(name);
+        CameraConfig cfg = wcfg.inner;
         CameraFactory factory = types.get(cfg.type);
         return factory.create(name, cfg, date);
     }
