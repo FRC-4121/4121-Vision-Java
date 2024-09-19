@@ -6,15 +6,22 @@ import java.io.Writer;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.concurrent.*;
+import java.util.function.Supplier;
 import com.google.gson.*;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 /// Base class for all camera objects.
-abstract class CameraBase {
+/// Implements functional interfaces.
+abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Mat> {
+    /// Name of the camera, used for loading from logs and debugging
     protected String name;
+    /// Camera configuration
     protected CameraConfig config;
+    /// The most recent successful frame from the camera. May be mutated by vision processors
     protected Mat frame;
+    /// Writer to log debug information and exceptions
     protected PrintWriter log;
 
     protected static LinkedHashMap<String, CameraConfig> configs; 
@@ -67,5 +74,19 @@ abstract class CameraBase {
             e.printStackTrace(log);
             return null;
         }
+    }
+
+    public Mat getFrame() {
+        return frame;
+    }
+
+    public Mat get() {
+        return readFrame();
+    }
+    public Mat call() {
+        return readFrame();
+    }
+    public void run() {
+        readFrame();
     }
 }
