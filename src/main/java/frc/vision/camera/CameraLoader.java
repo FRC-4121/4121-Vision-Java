@@ -7,7 +7,7 @@ import java.lang.reflect.Type;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
-import java.util.Calendar;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,7 +69,7 @@ public class CameraLoader {
 
     // Load a camera with the given name.
     // TODO: give better exceptions.
-    public static CameraBase load(String name, Calendar date) throws FileNotFoundException {
+    public static CameraBase load(String name, LocalDateTime date) throws FileNotFoundException {
         WrappedConfig wcfg = configs.get(name);
         CameraConfig cfg = wcfg.inner;
         CameraFactory factory = types.get(cfg.type);
@@ -78,6 +78,6 @@ public class CameraLoader {
     // Load a camera with the given name.
     // TODO: give better exceptions.
     public static CameraBase load(String name) throws FileNotFoundException {
-        return load(name, Calendar.getInstance());
+        return load(name, LocalDateTime.now());
     }
 }

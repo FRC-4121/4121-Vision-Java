@@ -1,21 +1,21 @@
 package frc.vision.camera;
 
 import java.io.FileNotFoundException;
-import java.util.Calendar;
+import java.time.LocalDateTime;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 public class FrameCamera extends CameraBase {
     protected Mat thisFrame;
-    public FrameCamera(String name, Mat img, Config cfg, Calendar date) throws FileNotFoundException {
+    public FrameCamera(String name, Mat img, Config cfg, LocalDateTime date) throws FileNotFoundException {
         super(name, cfg, date);
         Imgproc.resize(img, thisFrame, new Size(config.width, config.height));
     }
     public FrameCamera(String name, Mat img, Config cfg) throws FileNotFoundException {
-        this(name, img, cfg, Calendar.getInstance());
+        this(name, img, cfg, LocalDateTime.now());
     }
-    public FrameCamera(String name, int type, Config cfg, Calendar date) throws FileNotFoundException {
+    public FrameCamera(String name, int type, Config cfg, LocalDateTime date) throws FileNotFoundException {
         super(name, cfg, date);
         Size size = new Size(config.height, config.height);
         try {
@@ -31,9 +31,9 @@ public class FrameCamera extends CameraBase {
         }
     }
     public FrameCamera(String name, int type, Config cfg) throws FileNotFoundException {
-        this(name, type, cfg, Calendar.getInstance());
+        this(name, type, cfg, LocalDateTime.now());
     }
-    public FrameCamera(String name, Config cfg, Calendar date) throws FileNotFoundException {
+    public FrameCamera(String name, Config cfg, LocalDateTime date) throws FileNotFoundException {
         this(name, CvType.CV_8U, cfg, date);
     }
     public FrameCamera(String name, Config cfg) throws FileNotFoundException {
@@ -62,7 +62,7 @@ public class FrameCamera extends CameraBase {
         }
 
         @Override
-        public FrameCamera create(String name, CameraConfig cfg, Calendar date) throws FileNotFoundException {
+        public FrameCamera create(String name, CameraConfig cfg, LocalDateTime date) throws FileNotFoundException {
             return new FrameCamera(name, (Config)cfg, date);
         }
     }

@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.Calendar;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 import org.opencv.core.*;
@@ -23,16 +24,17 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
     protected PrintWriter log;
 
     public static File logDir = new File("logs/cam");
-    private static final String logNameFormat = "log_%s_%04d%02d%02d_%02d%02d%02d.txt";
+    protected static final String logNameFormat = "log_%s_%s.txt";
+    protected static final DateTimeFormatter logDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd_HHMMSS");
 
 
     protected CameraBase(String name, CameraConfig cfg) throws FileNotFoundException {
-        this(name, cfg, Calendar.getInstance());
+        this(name, cfg, LocalDateTime.now());
     }
-    protected CameraBase(String name, CameraConfig cfg, Calendar date) throws FileNotFoundException {
+    protected CameraBase(String name, CameraConfig cfg, LocalDateTime date) throws FileNotFoundException {
         this.name = name;
         this.config = cfg;
-        File path = new File(logDir, String.format(logNameFormat, name, date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DATE), date.get(Calendar.HOUR), date.get(Calendar.MINUTE), date.get(Calendar.SECOND)));
+        File path = new File(logDir, String.format(logNameFormat, name, logDateFormat.format(date)));
         log = new PrintWriter(path);
         log.write("logging for " + name + " at " + date.toString() + "\n");
     }
