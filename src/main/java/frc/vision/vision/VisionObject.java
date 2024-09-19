@@ -1,6 +1,6 @@
 import org.opencv.core.*;
 
-/// The base vision object is just a rectangle with a name.
+// The base vision object is just a rectangle with a name.
 class VisionObject extends Rect {
     VisionObject() {}
     VisionObject(int x, int y, int w, int h) {

@@ -3,7 +3,7 @@ import java.util.List;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
-/// Most vision processors find some kind of bounding rectangle around their objects.
+// Most vision processors find some kind of bounding rectangle around their objects.
 abstract class ObjectVisionProcessor extends VisionProcessor {
     protected List<VisionObject> objects;
     public Scalar rectColor;
@@ -15,7 +15,7 @@ abstract class ObjectVisionProcessor extends VisionProcessor {
         super(name);
         rectColor = color;
     }
-    /// Process the input image into a list of objects
+    // Process the input image into a list of objects
     protected abstract List<VisionObject> processObjects(Mat img, CameraConfig cfg);
     public void process(Mat img, CameraConfig cfg) {
         objects = processObjects(img, cfg);

@@ -12,16 +12,16 @@ import com.google.gson.*;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
-/// Base class for all camera objects.
-/// Implements functional interfaces.
+// Base class for all camera objects.
+// Implements functional interfaces.
 abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Mat> {
-    /// Name of the camera, used for loading from logs and debugging
+    // Name of the camera, used for loading from logs and debugging.
     protected String name;
-    /// Camera configuration
+    // Camera configuration.
     protected CameraConfig config;
-    /// The most recent successful frame from the camera. May be mutated by vision processors
+    // The most recent successful frame from the camera. May be mutated by vision processors
     protected Mat frame;
-    /// Writer to log debug information and exceptions
+    // Writer to log debug information and exceptions.
     protected PrintWriter log;
 
     protected static LinkedHashMap<String, CameraConfig> configs; 
@@ -43,7 +43,7 @@ abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Mat> {
         log.write("logging for " + name + " at " + date.toString() + "\n");
     }
 
-    /// Initialize configs from a file, in JSON.
+    // Initialize configs from a file, in JSON.
     public static void initConfig(Reader file) throws JsonSyntaxException, JsonIOException {
         Gson gson = new Gson();
         configs = gson.fromJson(file, LinkedHashMap.class);
@@ -56,13 +56,13 @@ abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Mat> {
         configInitialized = true;
     }
 
-    /// Main customization point for the camera. Read a single frame, or null if it failed.
+    // Main customization point for the camera. Read a single frame, or null if it failed.
     protected abstract Mat readFrameRaw();
 
-    /// Method to be called after all cameras are initialized.
+    // Method to be called after all cameras are initialized.
     protected void postInit() {}
 
-    /// Read a frame, do basic processing
+    // Read a frame, do basic processing
     public Mat readFrame() {
         try {
             Mat frame = readFrameRaw();

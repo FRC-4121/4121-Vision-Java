@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
-/// POJO for camera config
+// POJO for camera config
 class CameraConfig {
     public int width;
     public int height;
