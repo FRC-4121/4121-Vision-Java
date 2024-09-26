@@ -5,10 +5,19 @@ import frc.vision.pipeline.*;
 import frc.vision.process.*;
 import java.util.ArrayList;
 import java.util.concurrent.*;
-import org.opencv.core.Core;
+import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 
 public class Main {
+    static class QueuedImage {
+        public String name;
+        public Mat frame;
+        public QueuedImage(String name, Mat frame) {
+            this.name = name;
+            this.frame = frame;
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         boolean visionDebug = true;
 
@@ -21,10 +30,11 @@ public class Main {
         ArrayList<VisionProcessor> libs = new ArrayList();
 
         VisionLibsGroup group = new VisionLibsGroup(libs, null, true, exec);
+        
+        final ConcurrentLinkedQueue<QueuedImage> imgQueue = new ConcurrentLinkedQueue();
+
         if (visionDebug) {
-            group.setPostProcess((frame, cam) -> {
-                HighGui.imshow(cam.getName(), frame);
-            });
+            group.setPostProcess((frame, cam) -> imgQueue.add(new QueuedImage(cam.getName(), frame)));
         }
 
         AsyncCameraThread dummy = new AsyncCameraThread(CameraLoader.load("dummy"));
@@ -33,7 +43,26 @@ public class Main {
         dummy.start();
 
         System.out.println("Running successfully :3");
+        
 
-        while (true) {}
+        QueuedImage img;
+        boolean running = true;
+        int count = 0;
+        while (running) {
+            if (visionDebug) {
+                while ((img = imgQueue.poll()) != null) {
+                    HighGui.imshow(img.name, img.frame);
+                    int res = HighGui.waitKey(10);
+                    if (res >= 0) {
+                        running = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        dummy.cancel();
+
+        HighGui.waitKey(1); // appease opencv
     }
 }

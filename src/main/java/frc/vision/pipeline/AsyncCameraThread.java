@@ -17,13 +17,18 @@ public class AsyncCameraThread extends Thread {
     protected BiConsumer<Mat, ? super CameraBase> afterFrame;
     // Queue of futures to be run.
     protected ConcurrentLinkedQueue<CompletableFuture<Mat>> futures;
+    // Whether our loop should be running
+    protected boolean running;
 
     // Create a new thread with the given camera.
     public AsyncCameraThread(CameraBase camera) {
+        super(camera.getName());
         cam = camera;
         ready = new AtomicBoolean();
         afterFrame = (_mat, _cam) -> {};
         futures = new ConcurrentLinkedQueue();
+        running = true;
+        setDaemon(true);
     }
 
     // Set a new callback to be run after each frame.
@@ -54,6 +59,11 @@ public class AsyncCameraThread extends Thread {
         return result;
     }
 
+    // Politely ask this camera to stop looping and complete.
+    public void cancel() {
+        running = false;
+    }
+
     // Run a single frame.
     public void runSingle() {
         cam.run();
@@ -72,6 +82,7 @@ public class AsyncCameraThread extends Thread {
     }
 
     public void run() {
-        while (true) runSingle();
+        while (running) runSingle();
+        // running = true;
     }
 }

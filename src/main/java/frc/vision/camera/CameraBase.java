@@ -25,8 +25,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
 
     public static File logDir = new File("logs/cam");
     protected static final String logNameFormat = "log_%s_%s.txt";
-    protected static final DateTimeFormatter logDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd_HHMMSS");
-
+    protected static final DateTimeFormatter logDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     protected CameraBase(String name, CameraConfig cfg) throws FileNotFoundException {
         this(name, cfg, LocalDateTime.now());
@@ -37,6 +36,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
         File path = new File(logDir, String.format(logNameFormat, name, logDateFormat.format(date)));
         log = new PrintWriter(path);
         log.write("logging for " + name + " at " + date.toString() + "\n");
+        log.flush();
     }
 
     // Main customization point for the camera. Read a single frame, or null if it failed.
@@ -53,7 +53,11 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
             this.frame = frame;
             Imgproc.rectangle(frame, new Point(0, config.height - config.cropBottom), new Point(config.width, config.height), new Scalar(0));
             return frame;
-        } catch (Exception e) {
+        } 
+        catch (NullPointerException e) {
+            throw e;
+        }
+        catch (Exception e) {
             e.printStackTrace(log);
             return null;
         }

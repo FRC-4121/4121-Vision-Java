@@ -42,6 +42,9 @@ public class FrameCamera extends CameraBase {
 
     @Override
     protected Mat readFrameRaw() {
+        if (frame == null) {
+            return thisFrame.clone();
+        }
         thisFrame.copyTo(frame);
         return this.frame;
     }
