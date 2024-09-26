@@ -24,7 +24,6 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
 
     @Override
     protected void processStateful(Mat _img, CameraConfig _cfg, Ref state) {
-        System.out.println("process");
         if (state.inner == null) {
             state.inner = new State();
             state.inner.minFps = Float.POSITIVE_INFINITY;
@@ -52,7 +51,6 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
 
     @Override
     protected void toNetworkTableStateful(NetworkTable table, Ref state) {
-        System.out.println("table");
         if (state.inner == null) return;
         State s = state.inner;
 
@@ -64,11 +62,9 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
 
     @Override
     protected void drawOnImageStateful(Mat img, Ref state) {
-        System.out.println("draw");
         if (state.inner == null) return;
         State s = state.inner;
- 
-        String text = String.format("%3.1d/%3.1d/%3.1d/%3.1d", s.lastFps, s.minFps, s.maxFps, s.avgFps);
-        Imgproc.putText(img, text, new Point(10, 10), Imgproc.FONT_HERSHEY_PLAIN, 0.5, new Scalar(1, 1, 1));
+        String text = String.format("%5.1f/%5.1f/%5.1f/%5.1f", s.lastFps, s.minFps, s.maxFps, s.avgFps);
+        Imgproc.putText(img, text, new Point(10, 20), Imgproc.FONT_HERSHEY_SIMPLEX, 0.6, new Scalar(255, 255, 255));
     }
 }

@@ -43,13 +43,23 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         postProcess = callback;
     }
 
-    public void accept(Mat frame, CameraBase handle) {
+    public void accept(Mat frame, CameraBase camHandle) {
+        if (handle != null) {
+            handle.getNow(null);
+        }
         lastFrame = frame;
-        lastHandle = handle;
+        lastHandle = camHandle;
         if (state.compareAndSet(IDLE, RUNNING)) {
             scheduleSelf();
         } else {
-            state.set(READY);
+            synchronized(this) {
+                if (handle == null) {
+                    state.set(RUNNING);
+                    scheduleSelf();
+                } else {
+                    state.set(READY);
+                }
+            }
         }
     }
     protected Stream<? extends VisionProcessor> getLibs(Collection<String> vlibs) {
@@ -60,7 +70,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         CameraBase cam = lastHandle;
         CompletableFuture<Void> future = CompletableFuture.allOf(
             getLibs(cam.getConfig().vlibs)
-                .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam.getConfig(), handle), exec))
+                .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam.getConfig(), cam), exec))
                 .toArray(size -> new CompletableFuture[size])
         );
         if (table != null || visionDebug) {
@@ -79,8 +89,8 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
             });
         }
         handle = future
-            .thenAcceptAsync(_void -> postProcess.accept(frame, cam), exec)
-            .thenRun(() -> {
+            .thenRunAsync(() -> postProcess.accept(frame, cam), exec)
+            .thenRunAsync(() -> {
                 synchronized(this) {
                     handle = null;
                 }
@@ -89,7 +99,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
                 } else {
                     state.set(IDLE);
                 }
-            });
+            }, exec);
     }
     public void cancel() {
         synchronized(this) {

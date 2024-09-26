@@ -33,20 +33,19 @@ public abstract class InstancedVisionProcessor<S> extends VisionProcessor {
     @Override
     public void process(Mat img, CameraConfig cfg, Object handle) {
         Ref state = states.putIfAbsent(handle, new Ref());
+        if (state == null) state = states.get(handle);
         processStateful(img, cfg, state);
     }
 
     @Override
     public void toNetworkTable(NetworkTable table, Object handle) {
         Ref state = states.get(handle);
-        assert state != null;
         toNetworkTableStateful(table, state);
     }
 
     @Override
     public void drawOnImage(Mat img, Object handle) {
         Ref state = states.get(handle);
-        assert state != null;
         drawOnImageStateful(img, state);
     }
 }
