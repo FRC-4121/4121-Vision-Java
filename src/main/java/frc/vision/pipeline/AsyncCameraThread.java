@@ -19,6 +19,8 @@ public class AsyncCameraThread extends Thread {
     protected ConcurrentLinkedQueue<CompletableFuture<Mat>> futures;
     // Whether our loop should be running
     protected boolean running;
+    // The last seen frame
+    protected Mat lastFrame;
 
     // Create a new thread with the given camera.
     public AsyncCameraThread(CameraBase camera) {
@@ -28,6 +30,7 @@ public class AsyncCameraThread extends Thread {
         afterFrame = (_mat, _cam) -> {};
         futures = new ConcurrentLinkedQueue();
         running = true;
+        lastFrame = new Mat();
         setDaemon(true);
     }
 
@@ -67,7 +70,8 @@ public class AsyncCameraThread extends Thread {
     // Run a single frame.
     public void runSingle() {
         cam.run();
-        afterFrame.accept(cam.getFrame(), cam);
+        cam.getFrame().copyTo(lastFrame);
+        afterFrame.accept(lastFrame, cam);
         // After we've got a frame, we see if a future's waiting.
         CompletableFuture<Mat> future = null;
         do {
@@ -78,7 +82,7 @@ public class AsyncCameraThread extends Thread {
                 return;
             }
             // try to complete the future, but if it was cancelled or already completed for some other reason, we loop and check for the next one.
-        } while (!future.complete(cam.getFrame()));
+        } while (!future.complete(lastFrame));
     }
 
     public void run() {
