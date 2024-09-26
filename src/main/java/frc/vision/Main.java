@@ -9,57 +9,43 @@ import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 
 public class Main {
-    static class QueuedImage {
-        public String name;
-        public Mat frame;
-        public QueuedImage(String name, Mat frame) {
-            this.name = name;
-            this.frame = frame;
-        }
-    }
-
     public static void main(String[] args) throws Exception {
         boolean visionDebug = true;
 
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         CameraLoader.registerFactory(new FrameCamera.Factory());
+        CameraLoader.registerFactory(new VideoCaptureCamera.Factory());
         CameraLoader.initConfig();
 
         Executor exec = ForkJoinPool.commonPool();
 
-        VisionLibsGroup group = new VisionLibsGroup(Set.of(new FpsCounter()), null, true, exec);
+        VisionLibsGroup procs = new VisionLibsGroup(Set.of(new FpsCounter()), null, true, exec);
         
-        final ConcurrentLinkedQueue<QueuedImage> imgQueue = new ConcurrentLinkedQueue();
 
+        ImShower imgs = new ImShower();
         if (visionDebug) {
-            group.setPostProcess((frame, cam) -> imgQueue.add(new QueuedImage(cam.getName(), frame)));
+           procs.setPostProcess(imgs);
         }
 
-        AsyncCameraThread dummy = new AsyncCameraThread(CameraLoader.load("dummy"));
-        dummy.setCallback(group);
-
-        dummy.start();
+        CameraGroup cams = CameraGroup.of("idx0", "dummy");
+        cams.setCallback(procs);
+        cams.start();
 
         System.out.println("Running successfully :3");
         
-
-        QueuedImage img;
-        boolean running = true;
-        int count = 0;
-        while (running) {
+        while (true) {
             if (visionDebug) {
-                while ((img = imgQueue.poll()) != null) {
-                    HighGui.imshow(img.name, img.frame);
+                imgs.run();
+                if (imgs.canWaitKey()) {
                     int res = HighGui.waitKey(10);
                     if (res >= 0) {
-                        running = false;
                         break;
                     }
                 }
             }
         }
 
-        dummy.cancel();
+        cams.cancel();
 
         HighGui.waitKey(1); // appease opencv
     }

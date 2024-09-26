@@ -70,7 +70,9 @@ public class AsyncCameraThread extends Thread {
     // Run a single frame.
     public void runSingle() {
         cam.run();
-        cam.getFrame().copyTo(lastFrame);
+        Mat frame = cam.getFrame();
+        if (frame == null) return;
+        frame.copyTo(lastFrame);
         afterFrame.accept(lastFrame, cam);
         // After we've got a frame, we see if a future's waiting.
         CompletableFuture<Mat> future = null;

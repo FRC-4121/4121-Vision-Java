@@ -35,7 +35,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
         this.config = cfg;
         File path = new File(logDir, String.format(logNameFormat, name, logDateFormat.format(date)));
         log = new PrintWriter(path);
-        log.write("logging for " + name + " at " + date.toString() + "\n");
+        log.write(String.format("logging for %s at %s\n", name, date));
         log.flush();
     }
 
@@ -43,7 +43,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
     protected abstract Mat readFrameRaw();
 
     // Method to be called after all cameras are initialized.
-    protected void postInit() {}
+    public void postInit() {}
 
     // Read a frame, do basic processing
     public Mat readFrame() {
