@@ -6,27 +6,23 @@ import frc.vision.process.*;
 import java.lang.Void;
 import java.util.Collection;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.opencv.core.Mat;
 
 // Vision library group to handle dispatch from a frame to running vision processors.
-// Should be fully asynchronous and non-blocking on an input.
+// Should be mostly non-blocking.
 public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
-    static final int IDLE = 0;
-    static final int RUNNING = 1;
-    static final int READY = 2;
-
     Executor exec;
     Mat lastFrame;
     CameraBase lastHandle;
     Collection<? extends VisionProcessor> procs;
     NetworkTable table;
     BiConsumer<Mat, ? super CameraBase> postProcess;
-    CompletableFuture<Void> handle;
-    AtomicInteger state;
+    CompletableFuture<Boolean> handle;
+    AtomicBoolean ready;
     boolean visionDebug;
 
     public VisionLibsGroup(Collection<? extends VisionProcessor> procs, NetworkTable table, boolean visionDebug, Executor exec) {
@@ -35,8 +31,9 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         this.table = table;
         this.visionDebug = visionDebug;
 
-        state = new AtomicInteger(IDLE);
+        ready = new AtomicBoolean(false);
         postProcess = (_mat, _h) -> {};
+        handle = CompletableFuture.completedFuture(false);
     }
 
     public void setPostProcess(BiConsumer<Mat, ? super CameraBase> callback) {
@@ -44,67 +41,55 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     }
 
     public void accept(Mat frame, CameraBase camHandle) {
-        if (handle != null) {
-            handle.getNow(null);
-        }
-        lastFrame = frame;
-        lastHandle = camHandle;
-        if (state.compareAndSet(IDLE, RUNNING)) {
-            scheduleSelf();
-        } else {
-            synchronized(this) {
-                if (handle == null) {
-                    state.set(RUNNING);
-                    scheduleSelf();
-                } else {
-                    state.set(READY);
-                }
+        synchronized(handle) {
+            boolean running = false;
+            if (handle != null) {
+                running = handle.getNow(true);
             }
+            lastFrame = frame;
+            lastHandle = camHandle;
+            if (!running) scheduleSelf();
+            else ready.set(true);
         }
     }
     protected Stream<? extends VisionProcessor> getLibs(Collection<String> vlibs) {
         return procs.stream().filter(proc -> vlibs == null || vlibs.size() == 0 || vlibs.contains(proc.getName()));
     }
     protected void scheduleSelf() {
-        Mat frame = lastFrame;
-        CameraBase cam = lastHandle;
-        CompletableFuture<Void> future = CompletableFuture.allOf(
-            getLibs(cam.getConfig().vlibs)
-                .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam.getConfig(), cam), exec))
-                .toArray(size -> new CompletableFuture[size])
-        );
-        if (table != null || visionDebug) {
-            future = future.thenCompose(_void -> {
-                Stream<CompletableFuture<Void>> tables = Stream.empty();
-                if (table != null) {
-                    NetworkTable subTable = table.getSubTable(cam.getName());
-                    tables = getLibs(cam.getConfig().vlibs)
-                        .map(proc -> CompletableFuture.runAsync(() -> proc.toNetworkTable(table, cam), exec));
-                }
-                Stream<CompletableFuture<Void>> drawings = !visionDebug
-                    ? Stream.empty()
-                    : getLibs(cam.getConfig().vlibs)
-                        .map(proc -> CompletableFuture.runAsync(() -> proc.drawOnImage(frame, cam), exec));
-                return CompletableFuture.allOf(Stream.concat(tables, drawings).toArray(size -> new CompletableFuture[size]));
-            });
+        synchronized(handle) {
+            Mat frame = lastFrame;
+            CameraBase cam = lastHandle;
+            CompletableFuture<Void> future = CompletableFuture.allOf(
+                getLibs(cam.getConfig().vlibs)
+                    .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam.getConfig(), cam), exec))
+                    .toArray(size -> new CompletableFuture[size])
+            );
+            if (table != null || visionDebug) {
+                future = future.thenCompose(_void -> {
+                    Stream<CompletableFuture<Void>> tables = Stream.empty();
+                    if (table != null) {
+                        NetworkTable subTable = table.getSubTable(cam.getName());
+                        tables = getLibs(cam.getConfig().vlibs)
+                            .map(proc -> CompletableFuture.runAsync(() -> proc.toNetworkTable(table, cam), exec));
+                    }
+                    Stream<CompletableFuture<Void>> drawings = !visionDebug
+                        ? Stream.empty()
+                        : getLibs(cam.getConfig().vlibs)
+                            .map(proc -> CompletableFuture.runAsync(() -> proc.drawOnImage(frame, cam), exec));
+                    return CompletableFuture.allOf(Stream.concat(tables, drawings).toArray(size -> new CompletableFuture[size]));
+                });
+            }
+            handle.cancel(true);
+            handle = future
+                .thenRunAsync(() -> postProcess.accept(frame, cam), exec)
+                .thenRunAsync(() -> {
+                    if (ready.compareAndSet(true, false)) scheduleSelf();
+                }, exec)
+                .thenApply(_void -> false);
         }
-        handle = future
-            .thenRunAsync(() -> postProcess.accept(frame, cam), exec)
-            .thenRunAsync(() -> {
-                synchronized(this) {
-                    handle = null;
-                }
-                if (state.compareAndSet(READY, RUNNING)) {
-                    scheduleSelf();
-                } else {
-                    state.set(IDLE);
-                }
-            }, exec);
     }
     public void cancel() {
-        synchronized(this) {
-            if (handle != null) handle.cancel(false);
-        }
+        handle.cancel(false);
     }
     public boolean isRunning() {
         return handle != null;
