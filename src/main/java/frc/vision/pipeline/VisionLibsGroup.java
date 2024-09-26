@@ -22,14 +22,14 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     Executor exec;
     Mat lastFrame;
     CameraBase lastHandle;
-    Collection<VisionProcessor> procs;
+    Collection<? extends VisionProcessor> procs;
     NetworkTable table;
     BiConsumer<Mat, ? super CameraBase> postProcess;
     CompletableFuture<Void> handle;
     AtomicInteger state;
     boolean visionDebug;
 
-    public VisionLibsGroup(Collection<VisionProcessor> procs, NetworkTable table, boolean visionDebug, Executor exec) {
+    public VisionLibsGroup(Collection<? extends VisionProcessor> procs, NetworkTable table, boolean visionDebug, Executor exec) {
         this.procs = procs;
         this.exec = exec;
         this.table = table;
@@ -52,8 +52,8 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
             state.set(READY);
         }
     }
-    protected Stream<VisionProcessor> getLibs(Collection<String> vlibs) {
-        return procs.stream().filter(proc -> vlibs.size() == 0 || vlibs.contains(proc.getName()));
+    protected Stream<? extends VisionProcessor> getLibs(Collection<String> vlibs) {
+        return procs.stream().filter(proc -> vlibs == null || vlibs.size() == 0 || vlibs.contains(proc.getName()));
     }
     protected void scheduleSelf() {
         Mat frame = lastFrame;

@@ -3,7 +3,7 @@ package frc.vision;
 import frc.vision.camera.*;
 import frc.vision.pipeline.*;
 import frc.vision.process.*;
-import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.*;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
@@ -27,9 +27,7 @@ public class Main {
 
         Executor exec = ForkJoinPool.commonPool();
 
-        ArrayList<VisionProcessor> libs = new ArrayList();
-
-        VisionLibsGroup group = new VisionLibsGroup(libs, null, true, exec);
+        VisionLibsGroup group = new VisionLibsGroup(Set.of(new FpsCounter()), null, true, exec);
         
         final ConcurrentLinkedQueue<QueuedImage> imgQueue = new ConcurrentLinkedQueue();
 
