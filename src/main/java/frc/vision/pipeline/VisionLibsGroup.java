@@ -18,12 +18,12 @@ import org.opencv.core.Mat;
 // Should be mostly non-blocking.
 public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     protected static class CamState {
-        CompletableFuture<Boolean> handle;
+        CompletableFuture<Void> handle;
         Mat frame;
         AtomicBoolean ready;
 
         public CamState() {
-            handle = CompletableFuture.completedFuture(false);
+            handle = CompletableFuture.completedFuture(null);
             frame = new Mat();
             ready = new AtomicBoolean(false);
         }
@@ -34,7 +34,6 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     Collection<? extends VisionProcessor> procs;
     NetworkTable table;
     BiConsumer<Mat, ? super CameraBase> postProcess;
-    CompletableFuture<Boolean> handle;
     IdentityHashMap<CameraBase, CamState> states;
     boolean visionDebug;
 
@@ -68,10 +67,12 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     @Override
     public void accept(Mat frame, CameraBase cam) {
         CamState state = getState(cam);
+        try {
+            state.handle.getNow(null); // check for any exceptions
+        } catch (CancellationException e) {}
         synchronized(state) {
-            boolean running = state.handle.getNow(false);
             state.frame = frame;
-            if (!running) scheduleSelf(cam, state);
+            if (state.handle.isDone()) scheduleSelf(cam, state);
             else state.ready.set(true);
         }
     }
@@ -80,7 +81,6 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     }
     protected void scheduleSelf(CameraBase cam, CamState state) {
         synchronized(state) {
-            if (!state.handle.isDone()) return;
             Mat frame = state.frame.clone();
             CompletableFuture<Void> future = CompletableFuture.allOf(
                 getLibs(cam.getConfig().vlibs)
@@ -106,14 +106,18 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
                 .thenRunAsync(() -> postProcess.accept(frame, cam), exec)
                 .thenRunAsync(() -> {
                     if (state.ready.compareAndSet(true, false)) scheduleSelf(cam, state);
-                }, exec)
-                .thenApply(_void -> false);
+                }, exec);
         }
     }
     public void cancel() {
-        handle.cancel(false);
+        for (CamState state : states.values()) {
+            state.handle.cancel(false);
+        }
     }
     public boolean isRunning() {
-        return handle != null;
+        for (CamState state : states.values()) {
+            if (!state.handle.isDone()) return true;
+        }
+        return false;
     }
 }
