@@ -19,7 +19,10 @@ public class Main {
 
         Executor exec = ForkJoinPool.commonPool();
 
-        VisionLibsGroup procs = new VisionLibsGroup(Set.of(new FpsCounter()), null, true, exec);
+        VisionLibsGroup procs = new VisionLibsGroup(
+            Set.of(new FpsCounter(), new AprilTagProcessor("tags", "tag36h11")),
+            null, true, exec
+        );
         
 
         ImShower imgs = new ImShower();
