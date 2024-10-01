@@ -1,6 +1,7 @@
 package frc.vision.process;
 
 import edu.wpi.first.networktables.*;
+import frc.vision.Typed;
 import frc.vision.camera.CameraConfig;
 import java.time.*;
 import org.opencv.core.*;
@@ -66,5 +67,16 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
         State s = state.inner;
         String text = String.format("%5.1f/%5.1f/%5.1f/%5.1f", s.lastFps, s.minFps, s.maxFps, s.avgFps);
         Imgproc.putText(img, text, new Point(10, 20), Imgproc.FONT_HERSHEY_SIMPLEX, 0.6, new Scalar(255, 255, 255));
+    }
+
+    public static class Factory extends ProcessorFactory {
+        @Override
+        public String typeName() {
+            return "fps";
+        }
+        @Override
+        public FpsCounter create(String name, Typed cfg) {
+            return new FpsCounter(name);
+        }
     }
 }

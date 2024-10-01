@@ -2,8 +2,10 @@ package frc.vision.process;
 
 import edu.wpi.first.apriltag.*;
 import edu.wpi.first.networktables.*;
+import frc.vision.Typed;
 import frc.vision.camera.CameraConfig;
 import java.time.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -171,6 +173,31 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
                 tagColor,
                 2
             );
+        }
+    }
+
+    public static class Config extends Typed {
+        public ArrayList<String> family;
+    }
+    public static class Factory extends ProcessorFactory {
+        @Override
+        public String typeName() {
+            return "apriltag";
+        }
+        @Override
+        public Class<Config> configType() {
+            return Config.class;
+        }
+        @Override
+        public AprilTagProcessor create(String name, Typed cfg) {
+            AprilTagProcessor out = new AprilTagProcessor(name);
+            Config cfg_ = (Config)cfg;
+            if (cfg_.family != null) {
+                for (String family : cfg_.family) {
+                    out.getDetector().addFamily(family);
+                }
+            }
+            return out;
         }
     }
 }

@@ -13,14 +13,19 @@ public class Main {
         boolean visionDebug = true;
 
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
         CameraLoader.registerFactory(new FrameCamera.Factory());
         CameraLoader.registerFactory(new VideoCaptureCamera.Factory());
         CameraLoader.initConfig();
 
+        ProcessorLoader.registerFactory(new FpsCounter.Factory());
+        ProcessorLoader.registerFactory(new AprilTagProcessor.Factory());
+        ProcessorLoader.initConfig();
+
         Executor exec = ForkJoinPool.commonPool();
 
         VisionLibsGroup procs = new VisionLibsGroup(
-            Set.of(new FpsCounter(), new AprilTagProcessor("tags", "tag36h11")),
+            ProcessorLoader.loadAll("fps", "april"),
             null, true, exec
         );
         

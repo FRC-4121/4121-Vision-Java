@@ -1,25 +1,28 @@
-package frc.vision.camera;
+package frc.vision.process;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import frc.vision.Typed;
 import java.lang.Class;
 import java.lang.reflect.Type;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
-import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 // A camera that can be loaded from the configuration file.
-public class CameraLoader {
-    protected static HashMap<String, CameraFactory> types = new HashMap();
+public class ProcessorLoader {
+    protected static HashMap<String, ProcessorFactory> types = new HashMap();
     protected static HashMap<String, WrappedConfig> configs = new HashMap();
     private static boolean configInitialized = false;
 
     protected static class WrappedConfig {
-        CameraConfig inner;
-        public WrappedConfig(CameraConfig inner) {
+        Typed inner;
+        public WrappedConfig(Typed inner) {
             this.inner = inner;
         }
     }
@@ -29,13 +32,13 @@ public class CameraLoader {
         public WrappedConfig deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
             JsonObject obj = json.getAsJsonObject();
             String ty = obj.get("type").getAsString();
-            CameraFactory factory = types.get(ty);
-            CameraConfig cfg = context.deserialize(json, factory.configType());
+            ProcessorFactory factory = types.get(ty);
+            Typed cfg = context.deserialize(json, factory.configType());
             return new WrappedConfig(cfg);
         }
     }
 
-    protected CameraLoader() {}
+    protected ProcessorLoader() {}
 
     // Initialize configs from a file, in JSON.
     public static void initConfig(Reader file) throws JsonSyntaxException, JsonIOException {
@@ -43,38 +46,33 @@ public class CameraLoader {
             .registerTypeAdapter(WrappedConfig.class, new CustomDeserializer())
             .create();
         configs = gson.fromJson(file, new TypeToken<HashMap<String, WrappedConfig>>() {}.getType());
-        
-        for (Map.Entry<String, WrappedConfig> entry : configs.entrySet()) {
-            if (entry.getKey() == "default") continue;
-            WrappedConfig default_ = configs.get("default");
-            if (default_ != null) entry.getValue().inner.updateFrom(default_.inner);
-        }
         configInitialized = true;
     }
     public static void initConfig() throws JsonSyntaxException, JsonIOException, FileNotFoundException {
-        var res = CameraLoader.class
+        var res = ProcessorLoader.class
             .getClassLoader()
-            .getResource("cameras.json");
+            .getResource("process.json");
         if (res == null) return;
         initConfig(new FileReader(res.getFile()));
     }
 
     // Register a factory to create cameras.
-    public static void registerFactory(CameraFactory factory) {
+    public static void registerFactory(ProcessorFactory factory) {
         types.put(factory.typeName(), factory);
     }
 
     // Load a camera with the given name.
     // TODO: give better exceptions.
-    public static CameraBase load(String name, LocalDateTime date) throws FileNotFoundException {
+    public static VisionProcessor load(String name) {
         WrappedConfig wcfg = configs.get(name);
-        CameraConfig cfg = wcfg.inner;
-        CameraFactory factory = types.get(cfg.type);
-        return factory.create(name, cfg, date);
+        Typed cfg = wcfg.inner;
+        ProcessorFactory factory = types.get(cfg.type);
+        return factory.create(name, cfg);
     }
-    // Load a camera with the given name.
-    // TODO: give better exceptions.
-    public static CameraBase load(String name) throws FileNotFoundException {
-        return load(name, LocalDateTime.now());
+
+    public static List<VisionProcessor> loadAll(String... names) {
+        return Arrays.stream(names)
+            .map(name -> load(name))
+            .collect(Collectors.toList());
     }
 }

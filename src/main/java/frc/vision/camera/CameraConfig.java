@@ -1,10 +1,10 @@
 package frc.vision.camera;
 
+import frc.vision.Typed;
 import java.util.ArrayList;
 
 // Bean for camera config
-public class CameraConfig {
-    public String type;
+public class CameraConfig extends Typed {
     public int width;
     public int height;
     public float fov;

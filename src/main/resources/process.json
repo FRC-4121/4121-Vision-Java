@@ -1,0 +1,7 @@
+{
+    "fps": {"type": "fps"},
+    "april": {
+        "type": "apriltag",
+        "family": ["tag36h11"]
+    }
+}
