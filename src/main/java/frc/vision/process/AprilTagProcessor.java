@@ -84,11 +84,11 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
     }
 
     public AprilTagProcessor(String name, String family) {
-        this(name, new Scalar(255, 0, 0), family);
+        this(name, new Scalar(0, 0, 255), family);
     }
 
     public AprilTagProcessor(String name) {
-        this(name, new Scalar(255, 0, 0));
+        this(name, new Scalar(0, 0, 255));
     }
 
     public AprilTagDetector getDetector() {
@@ -106,14 +106,22 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
     @Override
     protected Collection<VisionObject> processObjects(Mat img, CameraConfig cfg) {
         AprilTagDetection[] tags = new AprilTagDetection[0];
+        Mat grayFrame = new Mat();
+        switch (img.channels()) {
+            case 1:
+                img.copyTo(grayFrame);
+                break;
+            case 3:
+                Imgproc.cvtColor(img, grayFrame, Imgproc.COLOR_BGR2GRAY);
+                break;
+            default:
+                throw new RuntimeException("Wrong number of image channels!");
+        }
         synchronized(detector) {
-            tags = detector.detect(img);
+            tags = detector.detect(grayFrame);
         }
         return Arrays.stream(tags)
-            .map(obj -> {
-                System.out.println(obj);
-                return new AprilTag(obj);
-            })
+            .map(obj -> new AprilTag(obj))
             .collect(Collectors.toList());
     }
 
@@ -149,7 +157,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
                 )),
                 true,
                 tagColor,
-                1,
+                5,
                 -1
             );
             Imgproc.putText(
@@ -157,8 +165,9 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
                 String.valueOf(tag.getId()),
                 new Point(tag.getCenterX(), tag.getCenterY()),
                 Imgproc.FONT_HERSHEY_PLAIN,
-                0.75,
-                tagColor
+                5.0,
+                tagColor,
+                2
             );
         }
     }

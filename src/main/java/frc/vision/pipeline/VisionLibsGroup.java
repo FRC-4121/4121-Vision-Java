@@ -66,6 +66,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
 
     @Override
     public void accept(Mat frame, CameraBase cam) {
+        if (frame == null) return;
         CamState state = getState(cam);
         try {
             state.handle.getNow(null); // check for any exceptions
