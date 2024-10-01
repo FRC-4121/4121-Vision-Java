@@ -1,6 +1,6 @@
-package frc.vision.process;
+package frc.vision.load;
 
-import frc.vision.Typed;
+import frc.vision.process.VisionProcessor;
 import java.time.LocalDateTime;
 
 // A camera that can be loaded, for use with CameraLoader.

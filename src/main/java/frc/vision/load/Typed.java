@@ -1,4 +1,4 @@
-package frc.vision;
+package frc.vision.load;
 
 // Simple class that contains a type field, base class for our loaders
 public class Typed {

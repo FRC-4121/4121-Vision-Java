@@ -1,6 +1,7 @@
 package frc.vision.pipeline;
 
 import frc.vision.camera.*;
+import frc.vision.load.CameraLoader;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.function.BiConsumer;

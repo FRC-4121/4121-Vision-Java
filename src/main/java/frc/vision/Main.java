@@ -1,6 +1,7 @@
 package frc.vision;
 
 import frc.vision.camera.*;
+import frc.vision.load.*;
 import frc.vision.pipeline.*;
 import frc.vision.process.*;
 import java.util.Set;

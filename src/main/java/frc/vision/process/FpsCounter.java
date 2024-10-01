@@ -1,8 +1,8 @@
 package frc.vision.process;
 
 import edu.wpi.first.networktables.*;
-import frc.vision.Typed;
 import frc.vision.camera.CameraConfig;
+import frc.vision.load.*;
 import java.time.*;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;

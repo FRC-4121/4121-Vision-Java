@@ -1,5 +1,7 @@
-package frc.vision.camera;
+package frc.vision.load;
 
+import frc.vision.camera.CameraBase;
+import frc.vision.camera.CameraConfig;
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 

@@ -1,6 +1,6 @@
 package frc.vision.camera;
 
-import frc.vision.Typed;
+import frc.vision.load.Typed;
 import java.util.ArrayList;
 
 // Bean for camera config
