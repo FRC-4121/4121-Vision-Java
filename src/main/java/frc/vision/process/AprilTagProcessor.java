@@ -160,12 +160,14 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
                 5,
                 -1
             );
+            double h = ((AprilTag)obj).height;
+            h *= 0.1;
             Imgproc.putText(
                 img,
                 String.valueOf(tag.getId()),
-                new Point(tag.getCenterX(), tag.getCenterY()),
+                new Point(tag.getCenterX() - h, tag.getCenterY()),
                 Imgproc.FONT_HERSHEY_PLAIN,
-                5.0,
+                h * 0.25,
                 tagColor,
                 2
             );
