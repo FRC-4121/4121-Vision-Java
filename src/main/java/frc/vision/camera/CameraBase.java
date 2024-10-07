@@ -22,10 +22,12 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
     protected Mat frame;
     // Writer to log debug information and exceptions.
     protected PrintWriter log;
+    // Whether we should catch exceptions
+    protected boolean catchExceptions;
 
     public static File logDir = new File("logs/cam");
-    protected static final String logNameFormat = "log_%s_%s.txt";
-    protected static final DateTimeFormatter logDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+    public static final String logNameFormat = "log_%s_%s.txt";
+    public static final DateTimeFormatter logDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     protected CameraBase(String name, CameraConfig cfg) throws FileNotFoundException {
         this(name, cfg, LocalDateTime.now());
@@ -33,6 +35,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
     protected CameraBase(String name, CameraConfig cfg, LocalDateTime date) throws FileNotFoundException {
         this.name = name;
         this.config = cfg;
+        this.catchExceptions = true;
         File path = new File(logDir, String.format(logNameFormat, name, logDateFormat.format(date)));
         log = new PrintWriter(path);
         log.write(String.format("logging for %s at %s\n", name, date));
@@ -40,13 +43,23 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
     }
 
     // Main customization point for the camera. Read a single frame, or null if it failed.
-    protected abstract Mat readFrameRaw();
+    protected abstract Mat readFrameRaw() throws Exception;
 
     // Method to be called after all cameras are initialized.
     public void postInit() {}
 
+    // Return whether or not we're currently catching exceptions that occur
+    public boolean getCatchExceptions() {
+        return catchExceptions;
+    }
+
+    // Set whether or not exceptions are being caught. If true, any exceptions that occur when reading a frame will be logged.
+    public void setCatchExceptions(boolean ex) {
+        catchExceptions = ex;
+    }
+
     // Read a frame, do basic processing
-    public Mat readFrame() {
+    public Mat readFrame() throws Exception {
         try {
             Mat frame = readFrameRaw();
             if (frame == null) return this.frame;
@@ -58,8 +71,9 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
             throw e;
         }
         catch (Exception e) {
-            e.printStackTrace(log);
-            return null;
+            if (catchExceptions) e.printStackTrace(log);
+            else throw e;
+            return frame;
         }
     }
 
@@ -75,13 +89,29 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
         return frame;
     }
 
-    public Mat get() {
-        return readFrame();
+    public PrintWriter getLog() {
+        return log;
     }
-    public Mat call() {
+
+    public Mat get() {
+        try {
+            return readFrame();
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public Mat call() throws Exception {
         return readFrame();
     }
     public void run() {
-        readFrame();
+        try {
+            readFrame();
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

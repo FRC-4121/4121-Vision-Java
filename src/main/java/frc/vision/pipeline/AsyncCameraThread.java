@@ -26,6 +26,7 @@ public class AsyncCameraThread extends Thread {
     public AsyncCameraThread(CameraBase camera) {
         super(camera.getName());
         cam = camera;
+        cam.setCatchExceptions(false); // we want to handle it in our loop
         ready = new AtomicBoolean();
         afterFrame = (_mat, _cam) -> {};
         futures = new ConcurrentLinkedQueue();
@@ -69,22 +70,27 @@ public class AsyncCameraThread extends Thread {
 
     // Run a single frame.
     public void runSingle() {
-        cam.run();
-        Mat frame = cam.getFrame();
-        if (frame == null) return;
-        frame.copyTo(lastFrame);
-        afterFrame.accept(lastFrame, cam);
-        // After we've got a frame, we see if a future's waiting.
-        CompletableFuture<Mat> future = null;
-        do {
-            future = futures.poll();
-            // If no futures are available, then we just say that we're ready for a new frame.
-            if (future == null) {
-                ready.setRelease(true);
-                return;
-            }
-            // try to complete the future, but if it was cancelled or already completed for some other reason, we loop and check for the next one.
-        } while (!future.complete(lastFrame));
+        try {
+            cam.run();
+            Mat frame = cam.getFrame();
+            if (frame == null) return;
+            frame.copyTo(lastFrame);
+            afterFrame.accept(lastFrame, cam);
+            // After we've got a frame, we see if a future's waiting.
+            CompletableFuture<Mat> future = null;
+            do {
+                future = futures.poll();
+                // If no futures are available, then we just say that we're ready for a new frame.
+                if (future == null) {
+                    ready.setRelease(true);
+                    return;
+                }
+                // try to complete the future, but if it was cancelled or already completed for some other reason, we loop and check for the next one.
+            } while (!future.complete(lastFrame));
+        } catch (Exception e) {
+            e.printStackTrace(cam.getLog());
+            running = false;
+        }
     }
 
     public void run() {

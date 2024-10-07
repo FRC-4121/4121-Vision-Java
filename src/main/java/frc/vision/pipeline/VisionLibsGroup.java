@@ -68,9 +68,6 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     public void accept(Mat frame, CameraBase cam) {
         if (frame == null) return;
         CamState state = getState(cam);
-        try {
-            state.handle.getNow(null); // check for any exceptions
-        } catch (CancellationException e) {}
         synchronized(state) {
             state.frame = frame;
             if (state.handle.isDone()) scheduleSelf(cam, state);
@@ -105,6 +102,10 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
             }
             state.handle = future
                 .thenRunAsync(() -> postProcess.accept(frame, cam), exec)
+                .exceptionally(e -> {
+                    e.printStackTrace(cam.getLog());
+                    return null;
+                })
                 .thenRunAsync(() -> {
                     if (state.ready.compareAndSet(true, false)) scheduleSelf(cam, state);
                 }, exec);

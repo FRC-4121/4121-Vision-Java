@@ -80,4 +80,9 @@ public class CameraGroup {
     public void stop() {
         for (AsyncCameraThread cam : cams) cam.stop();
     }
+
+    // Flush all of the cameras' logs.
+    public void flushLogs() {
+        for (AsyncCameraThread cam : cams) cam.getCamera().getLog().flush();
+    }
 }
