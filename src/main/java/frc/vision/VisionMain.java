@@ -48,7 +48,7 @@ public class VisionMain {
                 imgs.run();
                 if (imgs.canWaitKey()) {
                     int res = HighGui.waitKey(10);
-                    if (res >= 0) {
+                    if (res == 27) {
                         break;
                     }
                 }
