@@ -36,8 +36,11 @@ java {
 application {
     // Define the main class for the application.
     mainClass = 'frc.vision.VisionMain'
-    // applicationDefaultJvmArgs = ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n']
-}
+    // Look, this is supposed to just make you able to attach JDB but for some reason I can't reproduce the crash when it's enabled
+    // When disabled, there problems in the RectVisionLibrary, somewhere near or within the call to Imgproc.findContours call
+    // There are segfaults, and we get errors directly from malloc and free-- it seems to be corrupting the allocation header
+    // If anyone else wants to find out what caused this, good luck.
+    applicationDefaultJvmArgs = ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n'] }
 
 tasks.withType(JavaCompile) {
     // options.compilerArgs << '-Xlint:unchecked'
