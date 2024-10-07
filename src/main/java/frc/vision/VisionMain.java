@@ -9,7 +9,7 @@ import java.util.concurrent.*;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 
-public class Main {
+public class VisionMain {
     public static void main(String[] args) throws Exception {
         boolean visionDebug = true;
 
