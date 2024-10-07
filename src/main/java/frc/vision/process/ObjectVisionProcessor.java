@@ -53,7 +53,7 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
     @Override
     public void drawOnImageStateful(Mat img, Ref state) {
         for (VisionObject obj : state.inner) {
-            Imgproc.rectangle(img, obj.tl(), obj.br(), rectColor, 1);
+            Imgproc.rectangle(img, obj.tl(), obj.br(), rectColor, 2);
         }
     }
 }

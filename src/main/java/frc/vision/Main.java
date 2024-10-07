@@ -21,12 +21,13 @@ public class Main {
 
         ProcessorLoader.registerFactory(new FpsCounter.Factory());
         ProcessorLoader.registerFactory(new AprilTagProcessor.Factory());
+        ProcessorLoader.registerFactory(new RectVisionProcessor.Factory());
         ProcessorLoader.initConfig();
 
         Executor exec = ForkJoinPool.commonPool();
 
         VisionLibsGroup procs = new VisionLibsGroup(
-            ProcessorLoader.loadAll("fps", "april"),
+            ProcessorLoader.loadAll("fps", "april", "ring2024"),
             null, true, exec
         );
         
