@@ -8,18 +8,82 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.*;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 
 public class VisionMain {
-    protected static final String logNameFormat = "log_%s_%d.txt";
+    private enum CliState {
+        NORMAL,
+        LOG_DIR,
+    };
+
+    protected static final String logNameFormat = "log_%s_%s_%d.txt";
 
     public static void main(String[] args) throws Exception {
-        boolean visionDebug = true;
+        boolean visionDebug = false;
+        TreeSet camNames = new TreeSet();
         File logDir = new File("logs");
-        
+
+        CliState state = CliState.NORMAL;
+        for (String arg : args) {
+            switch (state) {
+                case NORMAL:
+                    if (arg.charAt(0) == '-') {
+                            if (arg.charAt(1) == '-') {
+                            String longFlag = arg.substring(2);
+                            if (longFlag == "vision-debug") {
+                                visionDebug = true;
+                            } else if (longFlag == "log-dir") {
+                                state = CliState.LOG_DIR;
+                            } else {
+                                System.err.println(String.format("Unknown long flag \"%s\"", longFlag));
+                                return;
+                            }
+                        } else {
+                            for (char c : arg.substring(1).toCharArray()) {
+                                switch (c) {
+                                    case 'v':
+                                        visionDebug = true;
+                                        break;
+                                    case 'l':
+                                        if (state != CliState.NORMAL) {
+                                            System.err.println("l flag expects the next argument to be the log directory, but another flag already is expecting something");
+                                            return;
+                                        }
+                                        state = CliState.LOG_DIR;
+                                        break;
+                                    default:
+                                        System.err.println(String.format("Unknown short flag \"%c\"", c));
+                                }
+                            }
+                        }
+                    } else {
+                        if (camNames.contains(arg)) {
+                            System.err.println(String.format("Duplicate camera \"%s\"", arg));
+                        }
+                        camNames.add(arg);
+                    }
+                    break;
+                case LOG_DIR:
+                    logDir = new File(arg);
+                    state = CliState.NORMAL;
+                    break;
+            }
+        }
+
+        switch (state) {
+            case NORMAL: break;
+            case LOG_DIR:
+                System.err.println("Expected a log directory but no more arguments were passed");
+                return;
+        }
+
+        if (camNames.isEmpty()) {
+            System.err.println("No cameras were specified!");
+        }
+ 
         long pid = ProcessHandle.current().pid();
         System.out.println("PID: " + pid);
         LocalDateTime time = LocalDateTime.now();
@@ -27,8 +91,8 @@ public class VisionMain {
 
         CameraBase.logDir = new File(logDir, "cam");
         File runLogs = new File(logDir, "run");
-        File runLog = new File(runLogs, String.format(logNameFormat, CameraBase.logDateFormat.format(time), pid));
-        final PrintWriter log = new PrintWriter(runLog);
+        File runLog = new File(runLogs, String.format(logNameFormat, String.join("_", camNames), CameraBase.logDateFormat.format(time), pid));
+        PrintWriter log = new PrintWriter(runLog);
         
         CameraGroup cams = null;
 
@@ -66,7 +130,7 @@ public class VisionMain {
                procs.setPostProcess(imgs);
             }
 
-            cams = CameraGroup.of("idx0", "dummy");
+            cams = CameraGroup.of("idx0");
             cams.setCallback(procs);
 
             {
