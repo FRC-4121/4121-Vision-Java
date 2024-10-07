@@ -6,7 +6,7 @@ import frc.vision.camera.CameraBase;
 import frc.vision.camera.CameraConfig;
 import java.lang.Class;
 import java.lang.reflect.Type;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.FileReader;
 import java.io.Reader;
 import java.time.LocalDateTime;
@@ -40,7 +40,7 @@ public class CameraLoader {
     protected CameraLoader() {}
 
     // Initialize configs from a file, in JSON.
-    public static void initConfig(Reader file) throws JsonSyntaxException, JsonIOException {
+    public static void initConfig(Reader file) throws JsonParseException, JsonIOException {
         Gson gson = new GsonBuilder()
             .registerTypeAdapter(WrappedConfig.class, new CustomDeserializer())
             .create();
@@ -53,7 +53,7 @@ public class CameraLoader {
         }
         configInitialized = true;
     }
-    public static void initConfig() throws JsonSyntaxException, JsonIOException, FileNotFoundException {
+    public static void initConfig() throws JsonParseException, IOException {
         var res = CameraLoader.class
             .getClassLoader()
             .getResource("cameras.json");
@@ -68,7 +68,7 @@ public class CameraLoader {
 
     // Load a camera with the given name.
     // TODO: give better exceptions.
-    public static CameraBase load(String name, LocalDateTime date) throws FileNotFoundException {
+    public static CameraBase load(String name, LocalDateTime date) throws IOException {
         WrappedConfig wcfg = configs.get(name);
         CameraConfig cfg = wcfg.inner;
         CameraFactory factory = types.get(cfg.type);
@@ -76,7 +76,7 @@ public class CameraLoader {
     }
     // Load a camera with the given name.
     // TODO: give better exceptions.
-    public static CameraBase load(String name) throws FileNotFoundException {
+    public static CameraBase load(String name) throws IOException {
         return load(name, LocalDateTime.now());
     }
 }

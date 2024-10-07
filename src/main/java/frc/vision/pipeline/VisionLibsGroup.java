@@ -21,11 +21,13 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         CompletableFuture<Void> handle;
         Mat frame;
         AtomicBoolean ready;
+        boolean loggedLibs;
 
         public CamState() {
             handle = CompletableFuture.completedFuture(null);
             frame = new Mat();
             ready = new AtomicBoolean(false);
+            loggedLibs = false;
         }
     }
     Executor exec;
@@ -74,11 +76,20 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
             else state.ready.set(true);
         }
     }
-    protected Stream<? extends VisionProcessor> getLibs(Collection<String> vlibs) {
+    public Stream<? extends VisionProcessor> getLibs(Collection<String> vlibs) {
         return procs.stream().filter(proc -> vlibs == null || vlibs.size() == 0 || vlibs.contains(proc.getName()));
     }
     protected void scheduleSelf(CameraBase cam, CamState state) {
         synchronized(state) {
+            if (!state.loggedLibs) {
+                String names = getLibs(cam.getConfig().vlibs)
+                    .map(p -> p.getName())
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("<none>");
+                cam.getLog().write(String.format("Using processors: %s\n", names));
+                cam.getLog().flush();
+                state.loggedLibs = true;
+            }
             Mat frame = state.frame.clone();
             CompletableFuture<Void> future = CompletableFuture.allOf(
                 getLibs(cam.getConfig().vlibs)

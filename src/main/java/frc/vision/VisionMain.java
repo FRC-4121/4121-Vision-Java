@@ -51,6 +51,14 @@ public class VisionMain {
                 ProcessorLoader.loadAll("fps", "april", "ring2024"),
                 null, visionDebug, exec
             );
+
+            {
+                String names = procs.getLibs(null)
+                    .map(p -> p.getName())
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("<none>");
+                log.write(String.format("Loaded processors: %s\n", names));
+            }
             
 
             ImShower imgs = new ImShower();
@@ -60,7 +68,19 @@ public class VisionMain {
 
             cams = CameraGroup.of("idx0", "dummy");
             cams.setCallback(procs);
+
+            {
+                String names = cams.getCams()
+                    .map(p -> p.getCamera().getName())
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("<none>");
+                log.write(String.format("Loaded cameras: %s\n", names));
+            }
+            
+            log.flush();
+
             cams.start();
+
 
             System.out.println("Running successfully :3");
             

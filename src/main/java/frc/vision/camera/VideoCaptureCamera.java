@@ -1,7 +1,7 @@
 package frc.vision.camera;
 
 import frc.vision.load.*;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import org.opencv.core.*;
 import org.opencv.videoio.*;
@@ -10,12 +10,12 @@ public class VideoCaptureCamera extends CameraBase {
     Mat currentFrame;
     VideoCapture cap;
 
-    public VideoCaptureCamera(String name, VideoCapture cap, CameraConfig cfg, LocalDateTime date) throws FileNotFoundException {
+    public VideoCaptureCamera(String name, VideoCapture cap, CameraConfig cfg, LocalDateTime date) throws IOException {
         super(name, cfg, date);
         this.currentFrame = new Mat();
         this.cap = cap;
     }
-    public VideoCaptureCamera(String name, Config cfg, LocalDateTime date) throws FileNotFoundException {
+    public VideoCaptureCamera(String name, Config cfg, LocalDateTime date) throws IOException {
         super(name, cfg, date);
         currentFrame = new Mat();
         if (cfg.index != null) {
@@ -65,10 +65,10 @@ public class VideoCaptureCamera extends CameraBase {
         log.flush();
     }
 
-    public VideoCaptureCamera(String name, VideoCapture cap, CameraConfig cfg) throws FileNotFoundException {
+    public VideoCaptureCamera(String name, VideoCapture cap, CameraConfig cfg) throws IOException {
         this(name, cap, cfg, LocalDateTime.now());
     }
-    public VideoCaptureCamera(String name, Config cfg) throws FileNotFoundException {
+    public VideoCaptureCamera(String name, Config cfg) throws IOException {
         this(name, cfg, LocalDateTime.now());
     }
 
@@ -110,7 +110,7 @@ public class VideoCaptureCamera extends CameraBase {
         }
 
         @Override
-        public VideoCaptureCamera create(String name, CameraConfig cfg, LocalDateTime date) throws FileNotFoundException {
+        public VideoCaptureCamera create(String name, CameraConfig cfg, LocalDateTime date) throws IOException {
             return new VideoCaptureCamera(name, (Config)cfg, date);
         }
     }

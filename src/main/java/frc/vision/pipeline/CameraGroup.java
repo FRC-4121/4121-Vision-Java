@@ -2,14 +2,15 @@ package frc.vision.pipeline;
 
 import frc.vision.camera.*;
 import frc.vision.load.CameraLoader;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 import org.opencv.core.Mat;
 
 public class CameraGroup {
-    ArrayList<AsyncCameraThread> cams;
-    boolean finished;
+    protected ArrayList<AsyncCameraThread> cams;
+    protected boolean finished;
 
     public CameraGroup() {
         cams = new ArrayList();
@@ -24,7 +25,7 @@ public class CameraGroup {
     }
 
     // Load a camera with a given name and add it.
-    public void add(String name) throws IllegalStateException, FileNotFoundException {
+    public void add(String name) throws IllegalStateException, IOException {
         if (finished) throw new IllegalStateException("Cannot add another camera after finalization!");
         cams.add(new AsyncCameraThread(CameraLoader.load(name)));
     }
@@ -36,7 +37,7 @@ public class CameraGroup {
     }
 
     // Load the given cameras by name, then finalize them.
-    public static CameraGroup of(String... names) throws FileNotFoundException {
+    public static CameraGroup of(String... names) throws IOException {
         CameraGroup out = new CameraGroup();
         for (String name : names) {
             CameraBase cam = CameraLoader.load(name);
@@ -84,5 +85,10 @@ public class CameraGroup {
     // Flush all of the cameras' logs.
     public void flushLogs() {
         for (AsyncCameraThread cam : cams) cam.getCamera().getLog().flush();
+    }
+
+    // Get the cameras, as a stream so they can't be modified (too much)
+    public Stream<AsyncCameraThread> getCams() {
+        return cams.stream();
     }
 }

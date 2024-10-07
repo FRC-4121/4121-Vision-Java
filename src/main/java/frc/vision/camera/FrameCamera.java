@@ -1,7 +1,7 @@
 package frc.vision.camera;
 
 import frc.vision.load.*;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -9,14 +9,14 @@ import org.opencv.imgproc.Imgproc;
 
 public class FrameCamera extends CameraBase {
     protected Mat thisFrame;
-    public FrameCamera(String name, Mat img, Config cfg, LocalDateTime date) throws FileNotFoundException {
+    public FrameCamera(String name, Mat img, Config cfg, LocalDateTime date) throws IOException {
         super(name, cfg, date);
         Imgproc.resize(img, thisFrame, new Size(config.width, config.height));
     }
-    public FrameCamera(String name, Mat img, Config cfg) throws FileNotFoundException {
+    public FrameCamera(String name, Mat img, Config cfg) throws IOException {
         this(name, img, cfg, LocalDateTime.now());
     }
-    public FrameCamera(String name, Config cfg, LocalDateTime date) throws FileNotFoundException {
+    public FrameCamera(String name, Config cfg, LocalDateTime date) throws IOException {
         super(name, cfg, date);
         Size size = new Size(config.height, config.height);
         try {
@@ -31,7 +31,7 @@ public class FrameCamera extends CameraBase {
             }
         }
     }
-    public FrameCamera(String name, Config cfg) throws FileNotFoundException {
+    public FrameCamera(String name, Config cfg) throws IOException {
         this(name, cfg, LocalDateTime.now());
     }
 
@@ -65,7 +65,7 @@ public class FrameCamera extends CameraBase {
         }
 
         @Override
-        public FrameCamera create(String name, CameraConfig cfg, LocalDateTime date) throws FileNotFoundException {
+        public FrameCamera create(String name, CameraConfig cfg, LocalDateTime date) throws IOException {
             return new FrameCamera(name, (Config)cfg, date);
         }
     }

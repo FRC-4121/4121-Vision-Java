@@ -1,9 +1,11 @@
 package frc.vision.camera;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.*;
@@ -29,17 +31,21 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
     public static final String logNameFormat = "log_%s_%s.txt";
     public static final DateTimeFormatter logDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
-    protected CameraBase(String name, CameraConfig cfg) throws FileNotFoundException {
+    protected CameraBase(String name, CameraConfig cfg) throws IOException {
         this(name, cfg, LocalDateTime.now());
     }
-    protected CameraBase(String name, CameraConfig cfg, LocalDateTime date) throws FileNotFoundException {
+    protected CameraBase(String name, CameraConfig cfg, LocalDateTime date) throws IOException {
         this.name = name;
         this.config = cfg;
         this.catchExceptions = true;
-        File path = new File(logDir, String.format(logNameFormat, name, logDateFormat.format(date)));
+        String filename = String.format(logNameFormat, name, logDateFormat.format(date));
+        File path = new File(logDir, filename);
         log = new PrintWriter(path);
         log.write(String.format("logging for %s at %s\n", name, date));
         log.flush();
+        File link = new File(logDir, String.format(logNameFormat, name, "LATEST"));
+        link.delete();
+        Files.createSymbolicLink(link.toPath(), Paths.get(filename));
     }
 
     // Main customization point for the camera. Read a single frame, or null if it failed.
