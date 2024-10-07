@@ -3,7 +3,8 @@
         "width": 640,
         "height": 480,
         "fov": 40,
-        "type": "frame"
+        "type": "frame",
+        "vlibs": ["fps"]
     },
     "idx0": {
         "width": 640,
