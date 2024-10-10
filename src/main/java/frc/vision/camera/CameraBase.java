@@ -6,6 +6,8 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.*;
@@ -26,6 +28,8 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
     protected PrintWriter log;
     // Whether we should catch exceptions
     protected boolean catchExceptions;
+
+    protected Instant lastFrame;
 
     public static File logDir = new File("logs/cam");
     public static final String logNameFormat = "log_%s_%s.txt";
@@ -68,6 +72,12 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
     public Mat readFrame() throws Exception {
         try {
             Mat frame = readFrameRaw();
+            if (lastFrame != null) {
+                Duration dur = Duration.between(lastFrame, Instant.now());
+                long toSleep = (long)(1000.0 / (float)config.fpsThrottle) - dur.toMillis();
+                if (toSleep > 0) Thread.currentThread().sleep(toSleep);
+            }
+            lastFrame = Instant.now();
             if (frame == null) return this.frame;
             this.frame = frame;
             Imgproc.rectangle(frame, new Point(0, config.height - config.cropBottom), new Point(config.width, config.height), new Scalar(0));

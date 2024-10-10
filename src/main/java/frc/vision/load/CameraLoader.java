@@ -30,7 +30,12 @@ public class CameraLoader {
         @Override
         public WrappedConfig deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
             JsonObject obj = json.getAsJsonObject();
-            String ty = obj.get("type").getAsString();
+            JsonElement elem = obj.get("type");
+            if (elem == null) {
+                CameraConfig cfg = context.deserialize(json, CameraConfig.class);
+                return new WrappedConfig(cfg);
+            }
+            String ty = elem.getAsString();
             CameraFactory factory = types.get(ty);
             CameraConfig cfg = context.deserialize(json, factory.configType());
             return new WrappedConfig(cfg);

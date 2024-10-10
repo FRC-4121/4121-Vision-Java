@@ -41,11 +41,6 @@ public class FrameCamera extends CameraBase {
             return thisFrame.clone();
         }
         thisFrame.copyTo(frame);
-        try {
-            Thread.currentThread().sleep(1);
-        } catch (Exception _e) {
-            // we don't really care if this fails
-        }
         return frame;
     }
 

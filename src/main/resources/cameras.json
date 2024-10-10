@@ -1,4 +1,7 @@
 {
+    "default": {
+        "fpsThrottle": 80
+    },
     "dummy": {
         "width": 640,
         "height": 480,
