@@ -46,9 +46,11 @@ public class CameraLoader {
 
     // Initialize configs from a file, in JSON.
     public static void initConfig(Reader file) throws JsonParseException, JsonIOException {
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(WrappedConfig.class, new CustomDeserializer())
-            .create();
+        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(WrappedConfig.class, new CustomDeserializer());
+        for (CameraFactory fac : types.values()) {
+            fac.modifyBuilder(builder);
+        }
+        Gson gson = builder.create();
         configs = gson.fromJson(file, new TypeToken<HashMap<String, WrappedConfig>>() {}.getType());
         
         for (Map.Entry<String, WrappedConfig> entry : configs.entrySet()) {
