@@ -17,6 +17,7 @@ public class VideoCaptureCamera extends CameraBase {
     int backoff;
     int counter;
     boolean wasOpened;
+    int failCount = 0;
 
     public VideoCaptureCamera(String name, VideoCapture cap, CameraConfig cfg, LocalDateTime date) throws IOException {
         super(name, cfg, date);
@@ -118,27 +119,29 @@ public class VideoCaptureCamera extends CameraBase {
     @Override
     public Mat readFrameRaw() {
         if (cap == null) return null;
-        // System.out.println("start");
         boolean ok = cap.isOpened() && cap.read(currentFrame);
-        // System.out.println("end");
         if (ok) {
             if (!wasOpened) {
                 log.write("We got the camera back!\n");
                 wasOpened = true;
             }
+            failCount = 0;
             backoff = 1;
             counter = 1;
         } else {
-            if (wasOpened) {
-                log.write("Lost the camera\n");
-                wasOpened = false;
-            }
-            if (counter == 0) {
-                reload();
-                backoff *= 2;
-                counter = backoff;
-            } else {
-                counter--;
+            failCount++;
+            if (failCount > 5) {
+                if (wasOpened) {
+                    log.write("Lost the camera\n");
+                    wasOpened = false;
+                }
+                if (counter == 0) {
+                    reload();
+                    backoff *= 2;
+                    counter = backoff;
+                } else {
+                    counter--;
+                }
             }
         }
         log.flush();
