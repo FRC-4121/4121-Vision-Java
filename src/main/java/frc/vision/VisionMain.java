@@ -29,7 +29,11 @@ public class VisionMain {
     public static void main(String[] args) throws Exception {
         Map<String, String> env = System.getenv();
         boolean visionDebug = false;
-        TreeSet camNames = new TreeSet(Arrays.asList(env.getOrDefault("VISION_CAMS", "").split(",")));
+        TreeSet camNames = new TreeSet();
+        {
+            String cs = env.getOrDefault("VISION_CAMS", "");
+            if (!cs.equals("")) camNames = new TreeSet(Arrays.asList(cs.split(",")));
+        }
         File logDir = new File(env.getOrDefault("VISION_LOGS", "logs"));
         String name = env.getOrDefault("NT_IDENTITY", "pi");
         String serverAddress = env.get("NT_SERVER_ADDR");
