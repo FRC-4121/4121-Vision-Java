@@ -8,6 +8,8 @@ import frc.vision.process.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
@@ -143,7 +145,10 @@ public class VisionMain {
         CameraBase.logDir = new File(logDir, "cam");
         CameraBase.echoErrors = echoErrors;
         File runLogs = new File(logDir, "run");
-        File runLog = new File(runLogs, String.format(logNameFormat, String.join("_", camNames), CameraBase.logDateFormat.format(time), pid));
+
+        String camNamesStr = String.join("_", camNames);
+        String filename = String.format(logNameFormat, camNamesStr, CameraBase.logDateFormat.format(time), pid);
+        File runLog = new File(runLogs, filename);
         PrintWriter log = new PrintWriter(runLog);
         
         CameraGroup cams = null;
@@ -151,6 +156,10 @@ public class VisionMain {
         try {
             log.write(String.format("Running with PID %d at %s\n", pid, time));
             System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
+            File link = new File(runLogs, String.format(CameraBase.logNameFormat, camNamesStr, "LATEST"));
+            link.delete();
+            Files.createSymbolicLink(link.toPath(), Paths.get(filename));
 
             CameraLoader.registerFactory(new FrameCamera.Factory());
             CameraLoader.registerFactory(new VideoCaptureCamera.Factory());
