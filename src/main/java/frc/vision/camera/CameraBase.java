@@ -45,6 +45,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
         String filename = String.format(logNameFormat, name, logDateFormat.format(date));
         File path = new File(logDir, filename);
         log = new PrintWriter(path);
+        // log = new PrintWriter(System.out);
         log.write(String.format("logging for %s at %s\n", name, date));
         log.flush();
         File link = new File(logDir, String.format(logNameFormat, name, "LATEST"));
@@ -79,8 +80,10 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
             }
             lastFrame = Instant.now();
             if (frame == null) return this.frame;
+            // if (frame.dataAddr() == 0) return this.frame;
             this.frame = frame;
             Imgproc.rectangle(frame, new Point(0, config.height - config.cropBottom), new Point(config.width, config.height), new Scalar(0));
+            log.flush();
             return frame;
         } 
         catch (NullPointerException e) {

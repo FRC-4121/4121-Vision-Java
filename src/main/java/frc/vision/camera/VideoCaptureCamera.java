@@ -2,9 +2,11 @@ package frc.vision.camera;
 
 import com.google.gson.*;
 import frc.vision.load.*;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import org.opencv.core.*;
 import org.opencv.videoio.*;
@@ -14,12 +16,14 @@ public class VideoCaptureCamera extends CameraBase {
     VideoCapture cap;
     int backoff;
     int counter;
+    boolean wasOpened;
 
     public VideoCaptureCamera(String name, VideoCapture cap, CameraConfig cfg, LocalDateTime date) throws IOException {
         super(name, cfg, date);
         this.currentFrame = new Mat();
         this.cap = cap;
         this.backoff = 1;
+        this.wasOpened = cap != null && cap.isOpened();
     }
     public VideoCaptureCamera(String name, Config cfg, LocalDateTime date) throws IOException {
         super(name, cfg, date);
@@ -72,6 +76,7 @@ public class VideoCaptureCamera extends CameraBase {
             }
         }
         log.flush();
+        wasOpened = cap != null && cap.isOpened();
     }
 
     public VideoCaptureCamera(String name, VideoCapture cap, CameraConfig cfg) throws IOException {
@@ -83,9 +88,9 @@ public class VideoCaptureCamera extends CameraBase {
 
     public void reload() {
         if (cap == null) {
-            log.write("Reload requested but capture is null");
+            log.write("Reload requested but capture is null\n");
         } else if (config instanceof Config) {
-            log.write("Reloading camera");
+            log.write("Reloading camera\n");
             Config cfg = (Config)config;
             if (cfg.index != null) {
                 cap.open(cfg.index);
@@ -107,15 +112,27 @@ public class VideoCaptureCamera extends CameraBase {
         } else {
             log.write("Reload requested but we don't know where the camera came from\n");
         }
+        log.flush();
     }
     
     @Override
     public Mat readFrameRaw() {
         if (cap == null) return null;
-        if (cap.isOpened()) {
+        // System.out.println("start");
+        boolean ok = cap.isOpened() && cap.read(currentFrame);
+        // System.out.println("end");
+        if (ok) {
+            if (!wasOpened) {
+                log.write("We got the camera back!\n");
+                wasOpened = true;
+            }
             backoff = 1;
             counter = 1;
         } else {
+            if (wasOpened) {
+                log.write("Lost the camera\n");
+                wasOpened = false;
+            }
             if (counter == 0) {
                 reload();
                 backoff *= 2;
@@ -124,7 +141,7 @@ public class VideoCaptureCamera extends CameraBase {
                 counter--;
             }
         }
-        boolean ok = cap.read(currentFrame);
+        log.flush();
         return ok ? currentFrame : null;
     }
 
@@ -168,11 +185,35 @@ public class VideoCaptureCamera extends CameraBase {
 
     // A numeric identifier corresponding to a physical port
     public static class PortNum implements Port {
+        private static final int[] map4 = {2, 1, 4, 3};
+        private static final int[] map5 = {0, 1, 3, 2};
         public int num;
         public PortNum(int num) {
             this.num = num;
         }
-        public String resolve() throws IOException { return null; }
+        public String resolve() throws IOException {
+            if (num >= 4) return null;
+            File f = new File(String.format("/sys/devices/platform/scb/fd500000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/usb1/1-1/1-1.%d/1-1.%<d:1.0/video4linux", map4[num]));
+            if (f.exists()) {
+                File[] names = f.listFiles((_dir, name) -> name.startsWith("video") && name.substring(5).matches("\\d+"));
+                Arrays.sort(names);
+                if (names.length > 0) {
+                    return "/dev/" + names[0].getName();
+                }
+            }
+            int port5 = map5[num];
+            f = new File(String.format("/sys/devices/platform/axi/1000120000.pcie/1f00%1$d00000.usb/xhci-hcd.%2$d/usb%2$d/%2$d-%3$d/%2$d-%3$d:1.0/video4linux",
+                port5 % 2 + 2, port5 % 2, port5 % 2 * 2 + 1, port5 / 2 + 1
+            ));
+            if (f.exists()) {
+                File[] names = f.listFiles((_dir, name) -> name.startsWith("video") && name.substring(5).matches("\\d+"));
+                Arrays.sort(names);
+                if (names.length > 0) {
+                    return "/dev/" + names[0].getName();
+                }
+            }
+            return null;
+        }
         public String toString() {
             return String.valueOf(num);
         }

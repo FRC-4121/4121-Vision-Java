@@ -1,21 +1,33 @@
 {
     "default": {
-        "fpsThrottle": 80
+        "fpsThrottle": 80,
+        "width": 640,
+        "height": 480
     },
     "dummy": {
-        "width": 640,
-        "height": 480,
         "fov": 40,
         "type": "frame",
         "vlibs": ["fps"]
     },
     "idx0": {
-        "width": 640,
-        "height": 480,
         "fps": 30,
         "fov": 43,
         "type": "cv",
         "fourcc": "YUYV",
         "index": 0
+    },
+    "port1": {
+        "fps": 30,
+        "fov": 43,
+        "type": "cv",
+        "fourcc": "YUYV",
+        "port": 1
+    },
+    "port0": {
+        "fps": 30,
+        "fov": 43,
+        "type": "cv",
+        "fourcc": "YUYV",
+        "port": 0
     }
 }
