@@ -29,6 +29,7 @@ public class VisionMain {
     public static void main(String[] args) throws Exception {
         Map<String, String> env = System.getenv();
         boolean visionDebug = false;
+        boolean echoErrors = false;
         TreeSet camNames = new TreeSet();
         {
             String cs = env.getOrDefault("VISION_CAMS", "");
@@ -45,14 +46,16 @@ public class VisionMain {
                     if (arg.charAt(0) == '-') {
                             if (arg.charAt(1) == '-') {
                             String longFlag = arg.substring(2);
-                            if (longFlag == "vision-debug") {
+                            if (longFlag.equals("vision-debug")) {
                                 visionDebug = true;
-                            } else if (longFlag == "log-dir") {
+                            } else if (longFlag.equals("log-dir")) {
                                 state = CliState.LOG_DIR;
-                            } else if (longFlag == "address" || longFlag == "server-address") {
+                            } else if (longFlag.equals("address") || longFlag.equals("server-address")) {
                                 state = CliState.ADDRESS;
-                            } else if (longFlag == "name") {
+                            } else if (longFlag.equals("name")) {
                                 state = CliState.NAME;
+                            } else if (longFlag.equals("echo-errors")) {
+                                echoErrors = true;
                             } else {
                                 System.err.println(String.format("Unknown long flag \"%s\"", longFlag));
                                 System.exit(1);
@@ -83,6 +86,9 @@ public class VisionMain {
                                             System.exit(1);
                                         }
                                         state = CliState.NAME;
+                                        break;
+                                    case 'e':
+                                        echoErrors = true;
                                         break;
                                     default:
                                         System.err.println(String.format("Unknown short flag \"%c\"", c));
@@ -135,6 +141,7 @@ public class VisionMain {
         System.out.println("running at " + String.valueOf(time));
 
         CameraBase.logDir = new File(logDir, "cam");
+        CameraBase.echoErrors = echoErrors;
         File runLogs = new File(logDir, "run");
         File runLog = new File(runLogs, String.format(logNameFormat, String.join("_", camNames), CameraBase.logDateFormat.format(time), pid));
         PrintWriter log = new PrintWriter(runLog);
@@ -219,6 +226,7 @@ public class VisionMain {
             if (visionDebug) HighGui.waitKey(1); // appease opencv
         } catch (Exception e) {
             e.printStackTrace(log);
+            if (echoErrors) e.printStackTrace();
         } finally {
             if (cams != null) cams.flushLogs();
             log.write(String.format("Run ended at %s\n", String.valueOf(LocalDateTime.now())));

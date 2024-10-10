@@ -31,6 +31,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
 
     protected Instant lastFrame;
 
+    public static boolean echoErrors = false;
     public static File logDir = new File("logs/cam");
     public static final String logNameFormat = "log_%s_%s.txt";
     public static final DateTimeFormatter logDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
@@ -90,7 +91,10 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
             throw e;
         }
         catch (Exception e) {
-            if (catchExceptions) e.printStackTrace(log);
+            if (catchExceptions) {
+                e.printStackTrace(log);
+                if (echoErrors) e.printStackTrace();
+            }
             else throw e;
             return frame;
         }

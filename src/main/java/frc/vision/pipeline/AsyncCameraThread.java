@@ -89,6 +89,7 @@ public class AsyncCameraThread extends Thread {
             } while (!future.complete(lastFrame));
         } catch (Exception e) {
             e.printStackTrace(cam.getLog());
+            if (CameraBase.echoErrors) e.printStackTrace();
             running = false;
         }
     }
