@@ -30,7 +30,7 @@
         "fourcc": "YUYV",
         "port": 0
     },
-    "usb2": {
+    "usb3": {
         "fps": 30,
         "fov": 43,
         "type": "cv",
