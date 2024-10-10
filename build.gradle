@@ -42,7 +42,12 @@ application {
     // When disabled, there problems in the RectVisionLibrary, somewhere near or within the call to Imgproc.findContours call
     // There are segfaults, and we get errors directly from malloc and free-- it seems to be corrupting the allocation header
     // If anyone else wants to find out what caused this, good luck.
-    applicationDefaultJvmArgs = ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n'] }
+    applicationDefaultJvmArgs = ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n']
+}
+
+tasks.register("saveClasspath") {
+    file("$rootDir/classpath.txt").setText(sourceSets.main.runtimeClasspath.asPath)
+}
 
 tasks.withType(JavaCompile) {
     // options.compilerArgs << '-Xlint:unchecked'

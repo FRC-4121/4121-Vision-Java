@@ -31,3 +31,6 @@ build
 
 # Ignore log files
 logs/**/*.txt
+
+# One command dumps the classpath to a file, we want to ignore that
+classpath.txt
