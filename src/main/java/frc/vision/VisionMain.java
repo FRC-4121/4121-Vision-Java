@@ -48,7 +48,7 @@ public class VisionMain {
                                 state = CliState.NAME;
                             } else {
                                 System.err.println(String.format("Unknown long flag \"%s\"", longFlag));
-                                return;
+                                System.exit(1);
                             }
                         } else {
                             for (char c : arg.substring(1).toCharArray()) {
@@ -59,26 +59,27 @@ public class VisionMain {
                                     case 'l':
                                         if (state != CliState.NORMAL) {
                                             System.err.println("l flag expects the next argument to be the log directory, but another flag already is expecting something");
-                                            return;
+                                            System.exit(1);
                                         }
                                         state = CliState.LOG_DIR;
                                         break;
                                     case 'a':
                                         if (state != CliState.NORMAL) {
                                             System.err.println("a flag expects the next argument to be the server address, but another flag already is expecting something");
-                                            return;
+                                            System.exit(1);
                                         }
                                         state = CliState.ADDRESS;
                                         break;
                                     case 'n':
                                         if (state != CliState.NORMAL) {
                                             System.err.println("n flag expects the next argument to be the NT name, but another flag already is expecting something");
-                                            return;
+                                            System.exit(1);
                                         }
                                         state = CliState.NAME;
                                         break;
                                     default:
                                         System.err.println(String.format("Unknown short flag \"%c\"", c));
+                                        System.exit(1);
                                 }
                             }
                         }
@@ -108,13 +109,13 @@ public class VisionMain {
             case NORMAL: break;
             case LOG_DIR:
                 System.err.println("Expected a log directory but no more arguments were passed");
-                return;
+                System.exit(1);
             case ADDRESS:
                 System.err.println("Expected the server address but no more arguments were passed");
-                return;
+                System.exit(1);
             case NAME:
                 System.err.println("Expected the name to be used but no more arguments were passed");
-                return;
+                System.exit(1);
         }
 
         if (camNames.isEmpty()) {
