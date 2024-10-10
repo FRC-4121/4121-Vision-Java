@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.*;
 import org.opencv.core.*;
@@ -25,11 +27,12 @@ public class VisionMain {
     protected static final String logNameFormat = "log_%s_%s_%d.txt";
 
     public static void main(String[] args) throws Exception {
+        Map<String, String> env = System.getenv();
         boolean visionDebug = false;
-        TreeSet camNames = new TreeSet();
-        File logDir = new File("logs");
-        String name = "pi";
-        String serverAddress = null;
+        TreeSet camNames = new TreeSet(Arrays.asList(env.getOrDefault("VISION_CAMS", "").split(",")));
+        File logDir = new File(env.getOrDefault("VISION_LOGS", "logs"));
+        String name = env.getOrDefault("NT_IDENTITY", "pi");
+        String serverAddress = env.get("NT_SERVER_ADDR");
 
         CliState state = CliState.NORMAL;
         for (String arg : args) {
