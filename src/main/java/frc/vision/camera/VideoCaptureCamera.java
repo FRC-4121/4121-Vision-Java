@@ -1,6 +1,7 @@
 package frc.vision.camera;
 
 import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import frc.vision.load.*;
 import java.io.File;
 import java.io.IOException;
@@ -268,7 +269,7 @@ public class VideoCaptureCamera extends CameraBase {
                     return new PortName(prim.getAsString());
                 }
             }
-            return new PortList(context.deserialize(json, List.class));
+            return new PortList(context.deserialize(json, new TypeToken<List<Port>>() {}.getType()));
         }
     }
 }
