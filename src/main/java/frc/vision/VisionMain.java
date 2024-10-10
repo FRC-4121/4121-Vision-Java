@@ -1,5 +1,6 @@
 package frc.vision;
 
+import edu.wpi.first.networktables.*;
 import frc.vision.camera.*;
 import frc.vision.load.*;
 import frc.vision.pipeline.*;
@@ -17,6 +18,8 @@ public class VisionMain {
     private enum CliState {
         NORMAL,
         LOG_DIR,
+        ADDRESS,
+        NAME,
     };
 
     protected static final String logNameFormat = "log_%s_%s_%d.txt";
@@ -25,6 +28,8 @@ public class VisionMain {
         boolean visionDebug = false;
         TreeSet camNames = new TreeSet();
         File logDir = new File("logs");
+        String name = "pi";
+        String serverAddress = null;
 
         CliState state = CliState.NORMAL;
         for (String arg : args) {
@@ -37,6 +42,10 @@ public class VisionMain {
                                 visionDebug = true;
                             } else if (longFlag == "log-dir") {
                                 state = CliState.LOG_DIR;
+                            } else if (longFlag == "address" || longFlag == "server-address") {
+                                state = CliState.ADDRESS;
+                            } else if (longFlag == "name") {
+                                state = CliState.NAME;
                             } else {
                                 System.err.println(String.format("Unknown long flag \"%s\"", longFlag));
                                 return;
@@ -54,6 +63,20 @@ public class VisionMain {
                                         }
                                         state = CliState.LOG_DIR;
                                         break;
+                                    case 'a':
+                                        if (state != CliState.NORMAL) {
+                                            System.err.println("a flag expects the next argument to be the server address, but another flag already is expecting something");
+                                            return;
+                                        }
+                                        state = CliState.ADDRESS;
+                                        break;
+                                    case 'n':
+                                        if (state != CliState.NORMAL) {
+                                            System.err.println("n flag expects the next argument to be the NT name, but another flag already is expecting something");
+                                            return;
+                                        }
+                                        state = CliState.NAME;
+                                        break;
                                     default:
                                         System.err.println(String.format("Unknown short flag \"%c\"", c));
                                 }
@@ -70,6 +93,14 @@ public class VisionMain {
                     logDir = new File(arg);
                     state = CliState.NORMAL;
                     break;
+                case ADDRESS:
+                    serverAddress = arg;
+                    state = CliState.NORMAL;
+                    break;
+                case NAME:
+                    name = arg;
+                    state = CliState.NORMAL;
+                    break;
             }
         }
 
@@ -77,6 +108,12 @@ public class VisionMain {
             case NORMAL: break;
             case LOG_DIR:
                 System.err.println("Expected a log directory but no more arguments were passed");
+                return;
+            case ADDRESS:
+                System.err.println("Expected the server address but no more arguments were passed");
+                return;
+            case NAME:
+                System.err.println("Expected the name to be used but no more arguments were passed");
                 return;
         }
 
@@ -111,9 +148,17 @@ public class VisionMain {
 
             Executor exec = ForkJoinPool.commonPool();
 
+            NetworkTableInstance nt = NetworkTableInstance.getDefault();
+            NetworkTable table = null;
+            if (serverAddress != null) {
+                nt.setServer(serverAddress);
+                nt.startClient3(name);
+                table = nt.getTable(name);
+            }
+
             VisionLibsGroup procs = new VisionLibsGroup(
                 ProcessorLoader.loadAll("fps", "april", "ring2024"),
-                null, visionDebug, exec
+                table, visionDebug, exec
             );
 
             {
@@ -130,7 +175,7 @@ public class VisionMain {
                procs.setPostProcess(imgs);
             }
 
-            cams = CameraGroup.of("idx0");
+            cams = CameraGroup.of(camNames);
             cams.setCallback(procs);
 
             {

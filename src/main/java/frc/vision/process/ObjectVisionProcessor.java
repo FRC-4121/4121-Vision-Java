@@ -28,6 +28,7 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
 
     @Override
     public void toNetworkTableStateful(NetworkTable table, Ref state) {
+        NetworkTable table_ = table.getSubTable(name);
         int i = 0;
         int size = state.inner.size();
         long[] x = new long[size];
@@ -42,12 +43,12 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
             h[i] = obj.height;
             o[i] = obj.offset();
         }
-        table.putValue("x", NetworkTableValue.makeIntegerArray(x));
-        table.putValue("y", NetworkTableValue.makeIntegerArray(y));
-        table.putValue("w", NetworkTableValue.makeIntegerArray(w));
-        table.putValue("h", NetworkTableValue.makeIntegerArray(h));
-        table.putValue("o", NetworkTableValue.makeDoubleArray(o));
-        table.putValue("len", NetworkTableValue.makeInteger(size));
+        table_.putValue("x", NetworkTableValue.makeIntegerArray(x));
+        table_.putValue("y", NetworkTableValue.makeIntegerArray(y));
+        table_.putValue("w", NetworkTableValue.makeIntegerArray(w));
+        table_.putValue("h", NetworkTableValue.makeIntegerArray(h));
+        table_.putValue("o", NetworkTableValue.makeDoubleArray(o));
+        table_.putValue("len", NetworkTableValue.makeInteger(size));
     }
 
     @Override

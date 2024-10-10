@@ -130,6 +130,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
     @Override
     public void toNetworkTableStateful(NetworkTable table, Ref state) {
         super.toNetworkTableStateful(table, state);
+        NetworkTable table_ = table.getSubTable(name);
         int size = state.inner.size();
         long[] ids = new long[size];
         double[] transforms = new double[size * 9];
@@ -140,8 +141,8 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
             double[] mat = tag.getHomography();
             for (int j = 0; j < 9; ++j) transforms[i * 9 + j] = mat[j];
         }
-        table.putValue("ids", NetworkTableValue.makeIntegerArray(ids));
-        table.putValue("transforms", NetworkTableValue.makeDoubleArray(transforms));
+        table_.putValue("ids", NetworkTableValue.makeIntegerArray(ids));
+        table_.putValue("transforms", NetworkTableValue.makeDoubleArray(transforms));
     }
 
     @Override

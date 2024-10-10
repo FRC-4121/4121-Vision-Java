@@ -14,13 +14,15 @@ repositories {
 dependencies {
     implementation 'org.openpnp:opencv:4.6.0-0' // available for download up to 4.9.0 but APT only goes up to 4.6
     implementation 'edu.wpi.first.apriltag:apriltag-java:2024.3.2'
-    implementation 'edu.wpi.first.apriltag:apriltag-jni:2024.3.2:linuxarm64'
     implementation 'edu.wpi.first.ntcore:ntcore-java:2024.3.2'
     implementation 'edu.wpi.first.wpiutil:wpiutil-java:2024.3.2'
     implementation 'com.google.code.gson:gson:2.11.0'
 
     runtimeOnly 'edu.wpi.first.wpimath:wpimath-java:2024.3.2' // needed for wpiutil I think?
     runtimeOnly 'edu.wpi.first.wpiunits:wpiunits-java:2024.3.2' // needed for wpimath
+    runtimeOnly 'edu.wpi.first.apriltag:apriltag-jni:2024.3.2:linuxarm64' // needed for apriltag
+    runtimeOnly 'edu.wpi.first.ntcore:ntcore-jni:2024.3.2:linuxarm64' // needed for ntcore
+    runtimeOnly 'edu.wpi.first.wpiutil:wpiutil-jni:2024.3.2:linuxarm64' // needed for ntcore
     runtimeOnly 'com.fasterxml.jackson.core:jackson-core:2.18.0' // needed so wpiutil doesn't get upset
     runtimeOnly 'us.hebi.quickbuf:quickbuf-runtime:1.4' // needed so wpimath doesn't get upset
     runtimeOnly 'org.ejml:ejml-core:0.43.1' // needed for wpimath
