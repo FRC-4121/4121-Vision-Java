@@ -1,0 +1,20 @@
+{
+    "fps": {"type": "fps"},
+    "april": {
+        "type": "apriltag",
+        "family": ["tag36h11"]
+    },
+    "ring2024": {
+        "type": "rect",
+        "height": 2.8,
+        "width": 14,
+        "tolerance": 1,
+        "hmin": 0,
+        "hmax": 14,
+        "smin": 180,
+        "smax": 255,
+        "vmin": 87,
+        "vmax": 255,
+        "minArea": 200
+    }
+}

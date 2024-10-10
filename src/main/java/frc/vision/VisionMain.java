@@ -6,6 +6,7 @@ import frc.vision.load.*;
 import frc.vision.pipeline.*;
 import frc.vision.process.*;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -22,6 +23,7 @@ public class VisionMain {
     private enum CliState {
         NORMAL,
         LOG_DIR,
+        CFG_DIR,
         ADDRESS,
         NAME,
     };
@@ -38,6 +40,7 @@ public class VisionMain {
             if (!cs.equals("")) camNames = new TreeSet(Arrays.asList(cs.split(",")));
         }
         File logDir = new File(env.getOrDefault("VISION_LOGS", "logs"));
+        File configDir = new File(env.getOrDefault("VISION_CONFIG", "config"));
         String name = env.getOrDefault("NT_IDENTITY", "pi");
         String serverAddress = env.get("NT_SERVER_ADDR");
 
@@ -52,6 +55,8 @@ public class VisionMain {
                                 visionDebug = true;
                             } else if (longFlag.equals("log-dir")) {
                                 state = CliState.LOG_DIR;
+                            } else if (longFlag.equals("config") || longFlag.equals("config-dir")) {
+                                state = CliState.CFG_DIR;
                             } else if (longFlag.equals("address") || longFlag.equals("server-address")) {
                                 state = CliState.ADDRESS;
                             } else if (longFlag.equals("name")) {
@@ -74,6 +79,13 @@ public class VisionMain {
                                             System.exit(1);
                                         }
                                         state = CliState.LOG_DIR;
+                                        break;
+                                    case 'c':
+                                        if (state != CliState.NORMAL) {
+                                            System.err.println("c flag expects the next argument to be the config directory, but another flag already is expecting something");
+                                            System.exit(1);
+                                        }
+                                        state = CliState.CFG_DIR;
                                         break;
                                     case 'a':
                                         if (state != CliState.NORMAL) {
@@ -109,6 +121,10 @@ public class VisionMain {
                     logDir = new File(arg);
                     state = CliState.NORMAL;
                     break;
+                case CFG_DIR:
+                    configDir = new File(arg);
+                    state = CliState.NORMAL;
+                    break;
                 case ADDRESS:
                     serverAddress = arg;
                     state = CliState.NORMAL;
@@ -124,6 +140,9 @@ public class VisionMain {
             case NORMAL: break;
             case LOG_DIR:
                 System.err.println("Expected a log directory but no more arguments were passed");
+                System.exit(1);
+            case CFG_DIR:
+                System.err.println("Expected a config directory but no more arguments were passed");
                 System.exit(1);
             case ADDRESS:
                 System.err.println("Expected the server address but no more arguments were passed");
@@ -163,12 +182,12 @@ public class VisionMain {
 
             CameraLoader.registerFactory(new FrameCamera.Factory());
             CameraLoader.registerFactory(new VideoCaptureCamera.Factory());
-            CameraLoader.initConfig();
+            CameraLoader.initConfig(new FileReader(new File(configDir, "cameras.json")));
 
             ProcessorLoader.registerFactory(new FpsCounter.Factory());
             ProcessorLoader.registerFactory(new AprilTagProcessor.Factory());
             ProcessorLoader.registerFactory(new RectVisionProcessor.Factory());
-            ProcessorLoader.initConfig();
+            ProcessorLoader.initConfig(new FileReader(new File(configDir, "process.json")));
 
             Executor exec = ForkJoinPool.commonPool();
 
