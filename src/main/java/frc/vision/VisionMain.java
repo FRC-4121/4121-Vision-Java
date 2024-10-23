@@ -187,6 +187,7 @@ public class VisionMain {
             ProcessorLoader.registerFactory(new FpsCounter.Factory());
             ProcessorLoader.registerFactory(new AprilTagProcessor.Factory());
             ProcessorLoader.registerFactory(new RectVisionProcessor.Factory());
+            ProcessorLoader.registerFactory(new VideoSaver.Factory());
             ProcessorLoader.initConfig(new FileReader(new File(configDir, "process.json")));
 
             Executor exec = ForkJoinPool.commonPool();
@@ -200,7 +201,7 @@ public class VisionMain {
             }
 
             VisionLibsGroup procs = new VisionLibsGroup(
-                ProcessorLoader.loadAll("fps", "april", "ring2024"),
+                ProcessorLoader.loadAll("fps", "save", "april", "ring2024"),
                 table, visionDebug, exec
             );
 

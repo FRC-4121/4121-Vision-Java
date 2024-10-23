@@ -1,12 +1,13 @@
 package frc.vision.process;
 
 import edu.wpi.first.networktables.*;
+import frc.vision.camera.CameraBase;
 import frc.vision.camera.CameraConfig;
-import java.util.IdentityHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import org.opencv.core.Mat;
 
 // Since vision processors can be used for multiple cameras, they sometimes need to keep their states separate.
-// This class maintaines an IdentityHashMap to keep the states separate for each object.
+// This class maintaines an ConcurrentHashMap to keep the states separate for each object.
 public abstract class InstancedVisionProcessor<S> extends VisionProcessor {
     // A simple wrapper around the state to allow passing by reference.
     protected class Ref {
@@ -14,11 +15,11 @@ public abstract class InstancedVisionProcessor<S> extends VisionProcessor {
     }
 
     // The states for this processor.
-    protected IdentityHashMap<Object, Ref> states;
+    protected ConcurrentHashMap<CameraBase, Ref> states;
 
     protected InstancedVisionProcessor(String name) {
         super(name);
-        states = new IdentityHashMap();
+        states = new ConcurrentHashMap();
     }
 
     // Process an image, but given a state instead of just a handle.
@@ -31,20 +32,20 @@ public abstract class InstancedVisionProcessor<S> extends VisionProcessor {
     protected abstract void drawOnImageStateful(Mat img, Ref state);
 
     @Override
-    public void process(Mat img, CameraConfig cfg, Object handle) {
+    public void process(Mat img, CameraBase handle) {
         Ref state = states.putIfAbsent(handle, new Ref());
         if (state == null) state = states.get(handle);
-        processStateful(img, cfg, state);
+        processStateful(img, handle.getConfig(), state);
     }
 
     @Override
-    public void toNetworkTable(NetworkTable table, Object handle) {
+    public void toNetworkTable(NetworkTable table, CameraBase handle) {
         Ref state = states.get(handle);
         toNetworkTableStateful(table, state);
     }
 
     @Override
-    public void drawOnImage(Mat img, Object handle) {
+    public void drawOnImage(Mat img, CameraBase handle) {
         Ref state = states.get(handle);
         drawOnImageStateful(img, state);
     }

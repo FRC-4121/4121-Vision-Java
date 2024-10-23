@@ -31,3 +31,6 @@ build
 
 # Ignore log files
 logs/**/*.txt
+
+# Ignore saved videos
+videos

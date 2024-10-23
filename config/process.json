@@ -1,5 +1,9 @@
 {
     "fps": {"type": "fps"},
+    "save": {
+        "type": "video",
+        "fps": 30
+    },
     "april": {
         "type": "apriltag",
         "family": ["tag36h11"]

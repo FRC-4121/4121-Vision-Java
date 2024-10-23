@@ -94,7 +94,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
             Mat frame = state.frame.clone();
             CompletableFuture<Void> future = CompletableFuture.allOf(
                 getLibs(cam.getConfig().vlibs)
-                    .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam.getConfig(), cam), exec))
+                    .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam), exec))
                     .toArray(size -> new CompletableFuture[size])
             );
             if (table != null || visionDebug) {
