@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoWriter;
 
 public class VideoSaver extends VisionProcessor {
@@ -60,7 +61,10 @@ public class VideoSaver extends VisionProcessor {
     @Override
     public void toNetworkTable(NetworkTable table, CameraBase handle) {}
     @Override
-    public void drawOnImage(Mat img, CameraBase handle) {}
+    public void drawOnImage(Mat img, CameraBase handle) {
+        Size sz = img.size();
+        Imgproc.circle(img, new Point(sz.width - 15, 15), 10, new Scalar(0, 0, 255), -1);
+    }
 
     public static class Config extends Typed {
         public double fps = 30;
