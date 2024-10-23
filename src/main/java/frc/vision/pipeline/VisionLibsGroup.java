@@ -103,7 +103,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
                     if (table != null) {
                         NetworkTable subTable = table.getSubTable(cam.getName());
                         tables = getLibs(cam.getConfig().vlibs)
-                            .map(proc -> CompletableFuture.runAsync(() -> proc.toNetworkTable(table, cam), exec));
+                            .map(proc -> CompletableFuture.runAsync(() -> proc.toNetworkTable(subTable, cam), exec));
                     }
                     Stream<CompletableFuture<Void>> drawings = !visionDebug
                         ? Stream.empty()
