@@ -4,6 +4,8 @@ import edu.wpi.first.networktables.NetworkTable;
 import frc.vision.camera.CameraBase;
 import frc.vision.load.*;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -42,10 +44,18 @@ public class VideoSaver extends VisionProcessor {
 
     public void register(CameraBase camera) {
         cams.computeIfAbsent(camera, cam -> {
+            String filename = String.format("%s_%s.%s", cam.getName(), CameraBase.logDateFormat.format(LocalDateTime.now()), extension);
+            File link = new File(savePath, String.format("%s_LATEST.%s", cam.getName(), extension));
+            link.delete();
+            try {
+                Files.createSymbolicLink(link.toPath(), Paths.get(filename));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             return new VideoWriter(
                 new File(
                     savePath,
-                    String.format("%s_%s.%s", cam.getName(), CameraBase.logDateFormat.format(LocalDateTime.now()), extension)
+                    filename
                 ).getPath(),
                 fourcc,
                 targetFps,
