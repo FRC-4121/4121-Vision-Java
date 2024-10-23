@@ -36,5 +36,14 @@
         "type": "cv",
         "fourcc": "YUYV",
         "port": [0, 1]
+    },
+    "big-boy": {
+        "width": 800,
+        "height": 600,
+        "fps": 30,
+        "fov": 43,
+        "type": "cv",
+        "fourcc": "YUYV",
+        "port": [0, 1]
     }
 }

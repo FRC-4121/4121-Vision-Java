@@ -45,38 +45,7 @@ public class VideoCaptureCamera extends CameraBase {
         } else {
             log.write("No way to select a camera was given!\n");
         }
-        if (cap != null) {
-            try {
-                if (cfg.width != 0) {
-                    cap.set(Videoio.CAP_PROP_FRAME_WIDTH, cfg.width);
-                }
-                if (cfg.height != 0) {
-                    cap.set(Videoio.CAP_PROP_FRAME_WIDTH, cfg.width);
-                }
-                if (cfg.fps != 0) {
-                    cap.set(Videoio.CAP_PROP_FPS, cfg.fps);
-                }
-                if (cfg.brightness != null) {
-                    cap.set(Videoio.CAP_PROP_BRIGHTNESS, cfg.brightness);
-                }
-                if (cfg.fourcc != null) {
-                    if (cfg.fourcc.length() == 4) {
-                        cap.set(Videoio.CAP_PROP_FOURCC,
-                            VideoWriter.fourcc(
-                                cfg.fourcc.charAt(0),
-                                cfg.fourcc.charAt(1),
-                                cfg.fourcc.charAt(2),
-                                cfg.fourcc.charAt(3)
-                            )
-                        );
-                    } else {
-                        log.write(String.format("Invalid fourcc \"%s\"\n", cfg.fourcc));
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace(log);
-            }
-        }
+        configureCapture();
         log.flush();
         wasOpened = cap != null && cap.isOpened();
     }
@@ -89,6 +58,7 @@ public class VideoCaptureCamera extends CameraBase {
     }
 
     public void reload() {
+        if (true) return;
         if (cap == null) {
             log.write("Reload requested but capture is null\n");
         } else if (config instanceof Config) {
@@ -111,10 +81,55 @@ public class VideoCaptureCamera extends CameraBase {
                     e.printStackTrace(log);
                 }
             }
+            // configureCapture();
         } else {
             log.write("Reload requested but we don't know where the camera came from\n");
         }
         log.flush();
+    }
+
+    public void configureCapture() {
+        if (config instanceof Config) {
+            Config cfg = (Config)config;
+            if (cap != null) {
+                try {
+                    if (cfg.width != 0) {
+                        log.write(String.format("Set width to %d\n", cfg.width));
+                        cap.set(Videoio.CAP_PROP_FRAME_WIDTH, cfg.width);
+                    }
+                    if (cfg.height != 0) {
+                        log.write(String.format("Set height to %d\n", cfg.height));
+                        cap.set(Videoio.CAP_PROP_FRAME_HEIGHT, cfg.height);
+                    }
+                    if (cfg.fps != 0) {
+                        log.write(String.format("Set FPS to %.2f\n", cfg.fps));
+                        cap.set(Videoio.CAP_PROP_FPS, cfg.fps);
+                    }
+                    if (cfg.brightness != null) {
+                        log.write(String.format("Set brightness to %d\n", cfg.brightness));
+                        cap.set(Videoio.CAP_PROP_BRIGHTNESS, cfg.brightness);
+                    }
+                    if (cfg.fourcc != null) {
+                        if (cfg.fourcc.length() == 4) {
+                            log.write(String.format("Set fourcc to %s\n", cfg.fourcc));
+                            cap.set(Videoio.CAP_PROP_FOURCC,
+                                VideoWriter.fourcc(
+                                    cfg.fourcc.charAt(0),
+                                    cfg.fourcc.charAt(1),
+                                    cfg.fourcc.charAt(2),
+                                    cfg.fourcc.charAt(3)
+                                )
+                            );
+                        } else {
+                            log.write(String.format("Invalid fourcc \"%s\"\n", cfg.fourcc));
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace(log);
+                }
+            }
+            log.flush();
+        }
     }
     
     @Override
@@ -146,6 +161,7 @@ public class VideoCaptureCamera extends CameraBase {
             }
         }
         log.flush();
+        // System.out.println(currentFrame.size());
         return ok ? currentFrame : null;
     }
 
