@@ -33,7 +33,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     Executor exec;
     Mat lastFrame;
     CameraBase lastHandle;
-    Collection<? extends VisionProcessor> procs;
+    Collection<VisionProcessor> procs;
     NetworkTable table;
     BiConsumer<Mat, ? super CameraBase> postProcess;
     IdentityHashMap<CameraBase, CamState> states;
@@ -42,7 +42,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     AtomicInteger running;
 
 
-    public VisionLibsGroup(Collection<? extends VisionProcessor> procs, NetworkTable table, boolean visionDebug, Executor exec) {
+    public VisionLibsGroup(Collection<VisionProcessor> procs, NetworkTable table, boolean visionDebug, Executor exec) {
         this.procs = procs;
         this.exec = exec;
         this.table = table;
@@ -77,8 +77,11 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
             else state.ready.set(true);
         }
     }
-    public Stream<? extends VisionProcessor> getLibs(Collection<String> vlibs) {
+    public Stream<VisionProcessor> getLibs(Collection<String> vlibs) {
         return procs.stream().filter(proc -> vlibs == null || vlibs.size() == 0 || vlibs.contains(proc.getName()));
+    }
+    public void add(VisionProcessor proc) {
+        procs.add(proc);
     }
     protected void scheduleSelf(CameraBase cam, CamState state) {
         synchronized(state) {

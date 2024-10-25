@@ -21,6 +21,10 @@ public class VideoSaver extends VisionProcessor {
     protected int fourcc;
     protected String extension;
     protected ConcurrentHashMap<CameraBase, VideoWriter> cams;
+    protected LocalDateTime startupTime;
+
+    public Duration lostTime;
+    public int framesWritten;
 
     public static File defaultSavePath = new File("videos");
 
@@ -40,11 +44,13 @@ public class VideoSaver extends VisionProcessor {
         this.cams = new ConcurrentHashMap();
         this.fourcc = VideoWriter.fourcc('M', 'J', 'P', 'G');
         this.extension = "avi";
+        this.startupTime = LocalDateTime.now();
+        this.lostTime = Duration.ZERO;
     }
 
     public void register(CameraBase camera) {
         cams.computeIfAbsent(camera, cam -> {
-            String filename = String.format("%s_%s.%s", cam.getName(), CameraBase.logDateFormat.format(LocalDateTime.now()), extension);
+            String filename = String.format("%s_%s.%s", cam.getName(), CameraBase.logDateFormat.format(startupTime), extension);
             File link = new File(savePath, String.format("%s_LATEST.%s", cam.getName(), extension));
             link.delete();
             try {
@@ -102,22 +108,26 @@ public class VideoSaver extends VisionProcessor {
         protected Instant lastTime;
 
         public WriteThread() {
+            setName("VideoSaver-" + name);
             setDaemon(true);
         }
 
         @Override
         public void run() {
             while (running) {
+                cams.forEach((cam, writer) -> writer.write(cam.getFrame()));
+                framesWritten++;
                 if (lastTime != null) {
                     long toSleep = (long)(1000 / targetFps - Duration.between(lastTime, Instant.now()).toMillis());
                     if (toSleep > 0) {
                         try {
                             sleep(toSleep);
                         } catch (Exception e) {}
+                    } else {
+                        lostTime = lostTime.plusMillis(-toSleep);
                     }
                 }
                 lastTime = Instant.now();
-                cams.forEach((cam, writer) -> writer.write(cam.getFrame()));
             }
         }
     }

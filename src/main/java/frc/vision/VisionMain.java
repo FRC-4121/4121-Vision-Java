@@ -34,6 +34,7 @@ public class VisionMain {
         Map<String, String> env = System.getenv();
         boolean visionDebug = false;
         boolean echoErrors = false;
+        boolean saveVideo = false;
         TreeSet camNames = new TreeSet();
         {
             String cs = env.getOrDefault("VISION_CAMS", "");
@@ -63,6 +64,8 @@ public class VisionMain {
                                 state = CliState.NAME;
                             } else if (longFlag.equals("echo-errors")) {
                                 echoErrors = true;
+                            } else if (longFlag.equals("save-video")) {
+                                saveVideo = true;
                             } else {
                                 System.err.println(String.format("Unknown long flag \"%s\"", longFlag));
                                 System.exit(1);
@@ -72,6 +75,9 @@ public class VisionMain {
                                 switch (c) {
                                     case 'v':
                                         visionDebug = true;
+                                        break;
+                                    case 's':
+                                        saveVideo = true;
                                         break;
                                     case 'l':
                                         if (state != CliState.NORMAL) {
@@ -172,6 +178,8 @@ public class VisionMain {
         
         CameraGroup cams = null;
 
+        VisionProcessor save = null;
+
         try {
             log.write(String.format("Running with PID %d at %s\n", pid, time));
             System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -201,9 +209,14 @@ public class VisionMain {
             }
 
             VisionLibsGroup procs = new VisionLibsGroup(
-                ProcessorLoader.loadAll("fps", "save", "april", "ring2024"),
+                ProcessorLoader.loadAll("fps", "april", "ring2024"),
                 table, visionDebug, exec
             );
+
+            if (saveVideo) {
+                save = ProcessorLoader.load("save");
+                procs.add(save);
+            }
 
             {
                 String names = procs.getLibs(null)
@@ -259,6 +272,17 @@ public class VisionMain {
         } finally {
             if (cams != null) cams.flushLogs();
             log.write(String.format("Run ended at %s\n", String.valueOf(LocalDateTime.now())));
+            if (save != null && save instanceof VideoSaver) {
+                VideoSaver saver = (VideoSaver)save;
+                log.write(
+                    String.format(
+                        "Video writing lost %dms over %d frames, avg loss is %dms\n",
+                        saver.lostTime.toMillis(),
+                        saver.framesWritten,
+                        saver.lostTime.dividedBy(saver.framesWritten).toMillis()
+                    )
+                );
+            }
             log.flush();
         }
     }
