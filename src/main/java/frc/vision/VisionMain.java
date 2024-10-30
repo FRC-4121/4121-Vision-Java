@@ -209,7 +209,7 @@ public class VisionMain {
             }
 
             VisionLibsGroup procs = new VisionLibsGroup(
-                ProcessorLoader.loadAll("fps", "april", "ring2024"),
+                ProcessorLoader.loadAll("fps", "april", "ring2024", "algae2025", "coral2025"),
                 table, visionDebug, exec
             );
 
