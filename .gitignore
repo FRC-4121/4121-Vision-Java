@@ -28,6 +28,8 @@ replay_pid*
 
 # Ignore Gradle build output directory
 build
+# This appears for some reason when I open VS code
+bin
 
 # Ignore log files
 logs/**/*.txt
