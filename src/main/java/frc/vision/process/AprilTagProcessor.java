@@ -1,6 +1,7 @@
 package frc.vision.process;
 
 import edu.wpi.first.apriltag.*;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.networktables.*;
 import frc.vision.camera.CameraConfig;
 import frc.vision.load.*;
@@ -16,12 +17,14 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
     protected AprilTagDetector detector;
     protected Scalar tagColor;
 
-    public static class AprilTag extends VisionObject {
+    public class AprilTag extends VisionObject {
         public AprilTagDetection found;
+        public Transform3d pose;
 
-        public AprilTag(AprilTagDetection found) {
+        public AprilTag(AprilTagDetection found, Transform3d pose) {
             super(rectFromTag(found));
             this.found = found;
+            this.pose = pose;
         }
 
         private static Rect rectFromTag(AprilTagDetection found) {
@@ -122,8 +125,10 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         synchronized(detector) {
             tags = detector.detect(grayFrame);
         }
+        // unlike the detector, the estimator seems to just be a wrapper around the config
+        AprilTagPoseEstimator estimator = new AprilTagPoseEstimator(cfg.poseConfig());
         return Arrays.stream(tags)
-            .map(obj -> new AprilTag(obj))
+            .map(obj -> new AprilTag(obj, estimator.estimate(obj)))
             .collect(Collectors.toList());
     }
 
@@ -133,16 +138,23 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         NetworkTable table_ = table.getSubTable(name);
         int size = state.inner.size();
         long[] ids = new long[size];
-        double[] transforms = new double[size * 9];
+        double[] homo = new double[size * 9];
+        double[] dists = new double[size];
         int i = 0;
         for (VisionObject obj : state.inner) {
-            AprilTagDetection tag = ((AprilTag)obj).found;
+            AprilTag obj_ = (AprilTag)obj;
+            AprilTagDetection tag = obj_.found;
             ids[i] = tag.getId();
             double[] mat = tag.getHomography();
-            for (int j = 0; j < 9; ++j) transforms[i * 9 + j] = mat[j];
+            for (int j = 0; j < 9; ++j) homo[i * 9 + j] = mat[j];
+            if (obj_.pose != null) {
+                dists[i] = obj_.pose.getTranslation().getNorm();
+            }
+            ++i;
         }
         table_.putValue("ids", NetworkTableValue.makeIntegerArray(ids));
-        table_.putValue("transforms", NetworkTableValue.makeDoubleArray(transforms));
+        table_.putValue("homo", NetworkTableValue.makeDoubleArray(homo));
+        table_.putValue("dist", NetworkTableValue.makeDoubleArray(dists));
     }
 
     @Override

@@ -42,6 +42,7 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
             w[i] = obj.width;
             h[i] = obj.height;
             o[i] = obj.offset();
+            ++i;
         }
         table_.putValue("x", NetworkTableValue.makeIntegerArray(x));
         table_.putValue("y", NetworkTableValue.makeIntegerArray(y));
