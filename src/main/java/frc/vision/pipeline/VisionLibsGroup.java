@@ -4,13 +4,11 @@ import edu.wpi.first.networktables.NetworkTable;
 import frc.vision.camera.*;
 import frc.vision.process.*;
 import java.lang.Void;
-import java.time.*;
 import java.util.Collection;
-import java.util.IdentityHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.opencv.core.Mat;
 
@@ -36,7 +34,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     Collection<VisionProcessor> procs;
     NetworkTable table;
     BiConsumer<Mat, ? super CameraBase> postProcess;
-    IdentityHashMap<CameraBase, CamState> states;
+    ConcurrentHashMap<CameraBase, CamState> states;
     boolean visionDebug;
 
     AtomicInteger running;
@@ -48,7 +46,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         this.table = table;
         this.visionDebug = visionDebug;
 
-        states = new IdentityHashMap();
+        states = new ConcurrentHashMap<CameraBase, CamState>();
         running = new AtomicInteger(0);
     }
 

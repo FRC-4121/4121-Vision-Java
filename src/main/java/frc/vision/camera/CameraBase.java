@@ -3,7 +3,6 @@ package frc.vision.camera;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -77,7 +76,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
             if (lastFrame != null) {
                 Duration dur = Duration.between(lastFrame, Instant.now());
                 long toSleep = (long)(1000.0 / (float)config.fpsThrottle) - dur.toMillis();
-                if (toSleep > 0) Thread.currentThread().sleep(toSleep);
+                if (toSleep > 0) Thread.sleep(toSleep);
             }
             lastFrame = Instant.now();
             if (frame == null) return this.frame;

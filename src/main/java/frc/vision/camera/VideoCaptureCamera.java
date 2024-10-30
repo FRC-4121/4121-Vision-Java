@@ -58,7 +58,7 @@ public class VideoCaptureCamera extends CameraBase {
     }
 
     public void reload() {
-        if (true) return;
+        // if (true) return;
         if (cap == null) {
             log.write("Reload requested but capture is null\n");
         } else if (config instanceof Config) {

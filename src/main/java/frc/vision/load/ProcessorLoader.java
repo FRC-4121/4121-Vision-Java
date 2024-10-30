@@ -3,7 +3,6 @@ package frc.vision.load;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import frc.vision.process.VisionProcessor;
-import java.lang.Class;
 import java.lang.reflect.Type;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -11,13 +10,12 @@ import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 // A camera that can be loaded from the configuration file.
 public class ProcessorLoader {
-    protected static HashMap<String, ProcessorFactory> types = new HashMap();
-    protected static HashMap<String, WrappedConfig> configs = new HashMap();
+    protected static HashMap<String, ProcessorFactory> types = new HashMap<String, ProcessorFactory>();
+    protected static HashMap<String, WrappedConfig> configs = new HashMap<String, WrappedConfig>();
     private static boolean configInitialized = false;
 
     protected static class WrappedConfig {
@@ -42,6 +40,10 @@ public class ProcessorLoader {
 
     // Initialize configs from a file, in JSON.
     public static void initConfig(Reader file) throws JsonSyntaxException, JsonIOException {
+        if (configInitialized) {
+            System.err.println("Calling ProcessorLoader.initConfig() when already initialized does nothing");
+            return;
+        }
         Gson gson = new GsonBuilder()
             .registerTypeAdapter(WrappedConfig.class, new CustomDeserializer())
             .create();

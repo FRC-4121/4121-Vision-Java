@@ -13,7 +13,7 @@ public class CameraGroup {
     protected boolean finished;
 
     public CameraGroup() {
-        cams = new ArrayList();
+        cams = new ArrayList<AsyncCameraThread>();
     }
 
     // Run the finalization for all cameras.
@@ -88,7 +88,11 @@ public class CameraGroup {
         for (AsyncCameraThread cam : cams) cam.cancel();
     }
 
-    // Forcibly stop all camera threads.
+    /**
+     * Forcibly stop all of the camera threads.
+     * @deprecated this calls `Thread.stop()`, which is deprecated.
+     */
+    @Deprecated
     public void stop() {
         for (AsyncCameraThread cam : cams) cam.stop();
     }

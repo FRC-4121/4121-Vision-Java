@@ -7,7 +7,6 @@ import frc.vision.pipeline.*;
 import frc.vision.process.*;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -35,10 +34,10 @@ public class VisionMain {
         boolean visionDebug = false;
         boolean echoErrors = false;
         boolean saveVideo = false;
-        TreeSet camNames = new TreeSet();
+        TreeSet<String> camNames = new TreeSet<String>();
         {
             String cs = env.getOrDefault("VISION_CAMS", "");
-            if (!cs.equals("")) camNames = new TreeSet(Arrays.asList(cs.split(",")));
+            if (!cs.equals("")) camNames = new TreeSet<String>(Arrays.asList(cs.split(",")));
         }
         File logDir = new File(env.getOrDefault("VISION_LOGS", "logs"));
         File configDir = new File(env.getOrDefault("VISION_CONFIG", "config"));

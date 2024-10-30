@@ -10,7 +10,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoWriter;
@@ -41,7 +40,7 @@ public class VideoSaver extends VisionProcessor {
         super(name);
         this.savePath = savePath;
         this.targetFps = fps;
-        this.cams = new ConcurrentHashMap();
+        this.cams = new ConcurrentHashMap<CameraBase, VideoWriter>();
         this.fourcc = VideoWriter.fourcc('M', 'J', 'P', 'G');
         this.extension = "avi";
         this.startupTime = LocalDateTime.now();

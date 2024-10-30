@@ -29,7 +29,7 @@ public class AsyncCameraThread extends Thread {
         cam.setCatchExceptions(false); // we want to handle it in our loop
         ready = new AtomicBoolean();
         afterFrame = (_mat, _cam) -> {};
-        futures = new ConcurrentLinkedQueue();
+        futures = new ConcurrentLinkedQueue<CompletableFuture<Mat>>();
         running = true;
         lastFrame = new Mat();
         setDaemon(true);
@@ -58,7 +58,7 @@ public class AsyncCameraThread extends Thread {
             return CompletableFuture.completedFuture(cam.getFrame().clone());
         }
         // if none was available, add a future to the queue and return it.
-        CompletableFuture<Mat> result = new CompletableFuture();
+        CompletableFuture<Mat> result = new CompletableFuture<Mat>();
         futures.add(result);
         return result;
     }

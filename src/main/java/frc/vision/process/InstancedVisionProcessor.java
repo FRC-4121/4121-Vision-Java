@@ -19,7 +19,7 @@ public abstract class InstancedVisionProcessor<S> extends VisionProcessor {
 
     protected InstancedVisionProcessor(String name) {
         super(name);
-        states = new ConcurrentHashMap();
+        states = new ConcurrentHashMap<CameraBase, Ref>();
     }
 
     // Process an image, but given a state instead of just a handle.

@@ -6,7 +6,6 @@ import frc.vision.load.Typed;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
@@ -30,11 +29,11 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
             new Scalar(cfg.hmax, cfg.smax, cfg.vmax),
             mat2
         );
-        ArrayList<MatOfPoint> contours = new ArrayList();
+        ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         Imgproc.findContours(mat2, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         // Imgproc.findContoursLinkRuns(mat2, contours); // exists in docs but not code?
         contours.sort(Comparator.comparing(c -> Integer.MAX_VALUE - c.size().area()));
-        ArrayList<VisionObject> out = new ArrayList();
+        ArrayList<VisionObject> out = new ArrayList<VisionObject>();
         double expAspect = cfg.height / cfg.width;
         double altAspect = cfg.sideways ? 1 / expAspect : expAspect;
         for (Mat c : contours) {

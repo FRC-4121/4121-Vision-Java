@@ -1,7 +1,6 @@
 package frc.vision.pipeline;
 
 import frc.vision.camera.CameraBase;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import org.opencv.core.Mat;
@@ -13,7 +12,7 @@ public class ImShower implements BiConsumer<Mat, CameraBase>, Runnable {
     protected boolean calledOnce;
 
     public ImShower() {
-        frames = new ConcurrentHashMap();
+        frames = new ConcurrentHashMap<String, Mat>();
         calledOnce = false;
     }
 
