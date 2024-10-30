@@ -20,5 +20,31 @@
         "vmin": 87,
         "vmax": 255,
         "minArea": 200
+    },
+    "algae2025": {
+       "type": "rect",
+       "height": 16,
+       "width": 16,
+       "tolerance": 0.1,
+       "hmin": 65,
+       "hmax": 101,
+       "smin": 75,
+       "smax": 255,
+       "vmin": 16,
+       "vmax": 179,
+       "minArea": 1000
+    },
+    "coral2025": {
+        "type": "rect",
+        "height": 11.875,
+        "width": 4,
+        "tolerance": 0.1,
+        "invert": true,
+        "hmin": 0,
+        "hmax": 255,
+        "smin": 0,
+        "smax": 26,
+        "vmin": 133,
+        "vmax": 215
     }
 }
