@@ -39,6 +39,7 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
         for (Mat c : contours) {
             VisionObject obj = new VisionObject(Imgproc.boundingRect(c));
             if (obj.area() < cfg.minArea) break;
+            if (cfg.maxArea != 0 && obj.area() > cfg.maxArea) continue;
             double aspect = (double)obj.height / obj.width;
             if (
                 ((aspect < expAspect * (1 - cfg.tolerance)) || // too wide for main
@@ -65,12 +66,14 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
         double tolerance = 100.0;
         boolean sideways = false;
         int minArea = 0;
+        int maxArea = 0;
 
-        public Scalar avgColor() {
+        public Scalar avgColor(boolean maybeInvert) {
             int h = (hmax + hmin) / 2;
             if (hmin > hmax) h += 128;
             h %= 256;
             int s = (smin + smax) / 2;
+            if (maybeInvert && s < 64) s = 256 - s;
             int v = (vmin + vmax) / 2;
             Mat hsv = new Mat(1, 1, CvType.CV_8UC3, new Scalar(h, s, v));
             Mat bgr = new Mat();
@@ -84,7 +87,7 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
             );
         }
         public Scalar rectColor() {
-            Scalar avg = avgColor();
+            Scalar avg = avgColor(true);
             return new Scalar(
                 255 - avg.val[0],
                 255 - avg.val[1],

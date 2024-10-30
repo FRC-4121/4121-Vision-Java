@@ -32,20 +32,20 @@
        "smax": 255,
        "vmin": 16,
        "vmax": 179,
-       "minArea": 1000
+       "minArea": 1200
     },
     "coral2025": {
         "type": "rect",
-        "height": 11.875,
+        "height": 11,
         "width": 4,
-        "tolerance": 0.5,
-        "invert": true,
+        "tolerance": 0.2,
         "minArea": 1000,
+        "maxArea": 0,
         "hmin": 0,
         "hmax": 255,
         "smin": 0,
-        "smax": 26,
-        "vmin": 133,
+        "smax": 60,
+        "vmin": 105,
         "vmax": 215
     }
 }
