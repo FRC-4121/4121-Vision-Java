@@ -75,7 +75,7 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
             return "fps";
         }
         @Override
-        public FpsCounter create(String name, Typed cfg) {
+        public FpsCounter create(String name, ProcessorConfig cfg) {
             return new FpsCounter(name);
         }
     }

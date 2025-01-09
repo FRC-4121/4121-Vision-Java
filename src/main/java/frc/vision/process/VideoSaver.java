@@ -81,7 +81,7 @@ public class VideoSaver extends VisionProcessor {
         Imgproc.circle(img, new Point(sz.width - 15, 15), 10, new Scalar(0, 0, 255), -1);
     }
 
-    public static class Config extends Typed {
+    public static class Config extends ProcessorConfig {
         public double fps = 30;
         public String savePath = defaultSavePath.getPath();
     }
@@ -95,7 +95,7 @@ public class VideoSaver extends VisionProcessor {
             return Config.class;
         }
         @Override
-        public VideoSaver create(String name, Typed cfg) {
+        public VideoSaver create(String name, ProcessorConfig cfg) {
             Config config = (Config)cfg;
             VideoSaver out = new VideoSaver(name, config.fps, config.savePath != null ? new File(config.savePath) : null);
             out.new WriteThread().start();

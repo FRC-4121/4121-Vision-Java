@@ -2,7 +2,6 @@ package frc.vision.process;
 
 import frc.vision.camera.CameraConfig;
 import frc.vision.load.ProcessorFactory;
-import frc.vision.load.Typed;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -52,7 +51,7 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
         return out;
     }
 
-    public static class Config extends Typed {
+    public static class Config extends ProcessorConfig {
         int hmin = 0;
         int hmax = 255;
         int smin = 0;
@@ -106,7 +105,7 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
             return Config.class;
         }
         @Override
-        public RectVisionProcessor create(String name, Typed cfg) {
+        public RectVisionProcessor create(String name, ProcessorConfig cfg) {
             return new RectVisionProcessor(name, (Config)cfg);
         }
     }

@@ -195,7 +195,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         }
     }
 
-    public static class Config extends Typed {
+    public static class Config extends ProcessorConfig {
         public ArrayList<String> family;
     }
     public static class Factory extends ProcessorFactory {
@@ -208,7 +208,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
             return Config.class;
         }
         @Override
-        public AprilTagProcessor create(String name, Typed cfg) {
+        public AprilTagProcessor create(String name, ProcessorConfig cfg) {
             AprilTagProcessor out = new AprilTagProcessor(name);
             Config cfg_ = (Config)cfg;
             if (cfg_.family != null) {
