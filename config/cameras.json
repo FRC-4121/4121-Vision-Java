@@ -13,8 +13,15 @@
         "fps": 30,
         "fov": 43,
         "type": "cv",
-        "fourcc": "YUYV",
+        "fourcc": "MJPG",
         "index": 0
+    },
+    "idx2": {
+        "fps": 30,
+        "fov": 43,
+        "type": "cv",
+        "fourcc": "MJPG",
+        "index": 2
     },
     "port1": {
         "fps": 30,
@@ -45,5 +52,13 @@
         "type": "cv",
         "fourcc": "YUYV",
         "port": [0, 1]
+    },
+    "idx0-bw": {
+        "fps": 30,
+        "fov": 43,
+        "type": "cv",
+        "fourcc": "MJPG",
+        "index": 0,
+        "vlibs": ["fps", "april"]
     }
 }
