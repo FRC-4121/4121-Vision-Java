@@ -1,9 +1,15 @@
 package frc.vision.process;
 
+import frc.vision.camera.CameraConfig;
 import org.opencv.core.*;
 
 // The base vision object is just a rectangle with a name.
 public class VisionObject extends Rect {
+    public double distance;
+    public double azimuth;
+    public double elevation;
+    public boolean hasAngles;
+
     VisionObject() {}
     VisionObject(int x, int y, int w, int h) {
         super(x, y, w, h);
@@ -20,8 +26,7 @@ public class VisionObject extends Rect {
     public String getName() {
         return "unknown";
     }
-    public double offset() {
+    public void calcAngles(CameraConfig cfg) {
         // TODO
-        return 0;
     }
 }

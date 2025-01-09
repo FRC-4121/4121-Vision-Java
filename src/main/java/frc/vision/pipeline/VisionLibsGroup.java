@@ -5,7 +5,6 @@ import frc.vision.camera.*;
 import frc.vision.process.*;
 import java.lang.Void;
 import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.BiConsumer;
@@ -18,40 +17,40 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     protected static class CamState {
         CompletableFuture<Void> handle;
         Mat frame;
-        AtomicBoolean ready;
         boolean loggedLibs;
 
         public CamState() {
             handle = CompletableFuture.completedFuture(null);
             frame = new Mat();
-            ready = new AtomicBoolean(false);
             loggedLibs = false;
         }
     }
     Executor exec;
-    Mat lastFrame;
     CameraBase lastHandle;
     Collection<VisionProcessor> procs;
     NetworkTable table;
     BiConsumer<Mat, ? super CameraBase> postProcess;
     ConcurrentHashMap<CameraBase, CamState> states;
     boolean visionDebug;
-
-    AtomicInteger running;
-
+    boolean cloneFrame;
 
     public VisionLibsGroup(Collection<VisionProcessor> procs, NetworkTable table, boolean visionDebug, Executor exec) {
         this.procs = procs;
         this.exec = exec;
         this.table = table;
         this.visionDebug = visionDebug;
+        this.cloneFrame = visionDebug;
 
         states = new ConcurrentHashMap<CameraBase, CamState>();
-        running = new AtomicInteger(0);
     }
 
     public void setPostProcess(BiConsumer<Mat, ? super CameraBase> callback) {
         postProcess = callback;
+    }
+
+    /// Make sure we have our own copy of the frame. Might not be necessary?
+    public void setCloneFrame(boolean cloneFrame) {
+        this.cloneFrame = cloneFrame;
     }
 
     public VisionLibsGroup clone() {
@@ -70,9 +69,11 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         if (frame.dataAddr() == 0) return;
         CamState state = getState(cam);
         synchronized(state) {
-            state.frame = frame;
-            if (state.handle.isDone()) scheduleSelf(cam, state);
-            else state.ready.set(true);
+            if (state.handle.isDone()) {
+                state.frame = frame;
+                scheduleSelf(cam, state);
+            }
+            // else state.ready.set(true);
         }
     }
     public Stream<VisionProcessor> getLibs(Collection<String> vlibs) {
@@ -92,12 +93,14 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
                 cam.getLog().flush();
                 state.loggedLibs = true;
             }
-            Mat frame = state.frame.clone();
+            // if (!cloneFrame) cam.getLock().lock();
+            Mat frame = cloneFrame ? state.frame.clone() : state.frame;
             CompletableFuture<Void> future = CompletableFuture.allOf(
                 getLibs(cam.getConfig().vlibs)
                     .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam), exec))
                     .toArray(size -> new CompletableFuture[size])
             );
+            // if (!cloneFrame) future = future.whenComplete((_void, _ex) -> cam.getLock().unlock());
             if (table != null || visionDebug) {
                 future = future.thenCompose(_void -> {
                     Stream<CompletableFuture<Void>> tables = Stream.empty();
@@ -113,15 +116,13 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
                     return CompletableFuture.allOf(Stream.concat(tables, drawings).toArray(size -> new CompletableFuture[size]));
                 });
             }
-            state.handle = future
+            CompletableFuture fut = future
                 .thenRunAsync(() -> postProcess.accept(frame, cam), exec)
                 .exceptionally(e -> {
                     e.printStackTrace(cam.getLog());
                     return null;
-                })
-                .thenRunAsync(() -> {
-                    if (state.ready.compareAndSet(true, false)) scheduleSelf(cam, state);
-                }, exec);
+                });
+            state.handle = fut;
         }
     }
     public void cancel() {

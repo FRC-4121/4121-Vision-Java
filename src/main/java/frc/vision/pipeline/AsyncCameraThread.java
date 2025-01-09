@@ -19,8 +19,6 @@ public class AsyncCameraThread extends Thread {
     protected ConcurrentLinkedQueue<CompletableFuture<Mat>> futures;
     // Whether our loop should be running
     protected boolean running;
-    // The last seen frame
-    protected Mat lastFrame;
 
     // Create a new thread with the given camera.
     public AsyncCameraThread(CameraBase camera) {
@@ -31,7 +29,6 @@ public class AsyncCameraThread extends Thread {
         afterFrame = (_mat, _cam) -> {};
         futures = new ConcurrentLinkedQueue<CompletableFuture<Mat>>();
         running = true;
-        lastFrame = new Mat();
         setDaemon(true);
     }
 
@@ -50,19 +47,6 @@ public class AsyncCameraThread extends Thread {
         return cam;
     }
 
-    // Get a future to the most recent frame.
-    // May return immediately or add a future to the queue if a frame has already been requested since the last one has been read.
-    public CompletableFuture<Mat> getFuture() {
-        // this cmpxchg checks to see if there's a ready frame and if so, sets it to false.
-        if (ready.compareAndExchange(true, false)) {
-            return CompletableFuture.completedFuture(cam.getFrame().clone());
-        }
-        // if none was available, add a future to the queue and return it.
-        CompletableFuture<Mat> result = new CompletableFuture<Mat>();
-        futures.add(result);
-        return result;
-    }
-
     // Politely ask this camera to stop looping and complete.
     public void cancel() {
         running = false;
@@ -74,19 +58,7 @@ public class AsyncCameraThread extends Thread {
             cam.run();
             Mat frame = cam.getFrame();
             if (frame == null) return;
-            frame.copyTo(lastFrame);
-            afterFrame.accept(lastFrame, cam);
-            // After we've got a frame, we see if a future's waiting.
-            CompletableFuture<Mat> future = null;
-            do {
-                future = futures.poll();
-                // If no futures are available, then we just say that we're ready for a new frame.
-                if (future == null) {
-                    ready.setRelease(true);
-                    return;
-                }
-                // try to complete the future, but if it was cancelled or already completed for some other reason, we loop and check for the next one.
-            } while (!future.complete(lastFrame));
+            afterFrame.accept(frame, cam);
         } catch (Exception e) {
             e.printStackTrace(cam.getLog());
             if (CameraBase.echoErrors) e.printStackTrace();
@@ -95,6 +67,7 @@ public class AsyncCameraThread extends Thread {
     }
 
     public void run() {
+        System.out.println("starting camera uwu");
         while (running) runSingle();
         // running = true;
     }

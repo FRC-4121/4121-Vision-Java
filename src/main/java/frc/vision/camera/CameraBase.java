@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -28,6 +29,8 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
     // Whether we should catch exceptions
     protected boolean catchExceptions;
 
+    protected ReentrantLock cameraLock;
+
     protected Instant lastFrame;
 
     public static boolean echoErrors = false;
@@ -42,6 +45,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
         this.name = name;
         this.config = cfg;
         this.catchExceptions = true;
+        this.cameraLock = new ReentrantLock();
         String filename = String.format(logNameFormat, name, logDateFormat.format(date));
         File path = new File(logDir, filename);
         log = new PrintWriter(path);
@@ -71,7 +75,10 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
 
     // Read a frame, do basic processing
     public Mat readFrame() throws Exception {
+        boolean locked = false;
         try {
+            if (!cameraLock.tryLock(config.lockTimeout, TimeUnit.MILLISECONDS)) return this.frame;
+            locked = true;
             Mat frame = readFrameRaw();
             if (lastFrame != null) {
                 Duration dur = Duration.between(lastFrame, Instant.now());
@@ -81,9 +88,12 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
             lastFrame = Instant.now();
             if (frame == null) return this.frame;
             // if (frame.dataAddr() == 0) return this.frame;
-            this.frame = frame;
+            if (config.enforceSize && !(frame.rows() == config.height && frame.cols() == config.width)) {
+                if (this.frame == null) this.frame = new Mat();
+                Imgproc.resize(frame, this.frame, new Size(config.width, config.height));
+            }
+            else this.frame = frame;
             Imgproc.rectangle(frame, new Point(0, frame.rows() - config.cropBottom), new Point(frame.cols(), frame.rows()), new Scalar(0));
-            log.flush();
             return frame;
         } 
         catch (NullPointerException e) {
@@ -92,11 +102,19 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
         catch (Exception e) {
             if (catchExceptions) {
                 e.printStackTrace(log);
+                log.flush();
                 if (echoErrors) e.printStackTrace();
             }
             else throw e;
             return frame;
         }
+        finally {
+            if (locked) cameraLock.unlock();
+        }
+    }
+
+    public ReentrantLock getLock() {
+        return cameraLock;
     }
 
     public CameraConfig getConfig() {

@@ -9,6 +9,7 @@ import org.opencv.imgproc.Imgproc;
 // Most vision processors find some kind of bounding rectangle around their objects.
 public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Collection<VisionObject>> {
     public Scalar rectColor;
+    protected boolean calcAngles;
 
     protected ObjectVisionProcessor(String name) {
         this(name, new Scalar(1.0, 0.0, 0.0));
@@ -24,6 +25,7 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
     @Override
     public void processStateful(Mat img, CameraConfig cfg, Ref state) {
         state.inner = processObjects(img, cfg);
+        if (calcAngles) state.inner.forEach(obj -> obj.calcAngles(cfg));
     }
 
     @Override
@@ -31,24 +33,18 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
         NetworkTable table_ = table.getSubTable(name);
         int i = 0;
         int size = state.inner.size();
-        long[] x = new long[size];
-        long[] y = new long[size];
-        long[] w = new long[size];
-        long[] h = new long[size];
-        double[] o = new double[size];
+        double[] a = new double[size];
+        double[] e = new double[size];
+        double[] d = new double[size];
         for (VisionObject obj : state.inner) {
-            x[i] = obj.x;
-            y[i] = obj.y;
-            w[i] = obj.width;
-            h[i] = obj.height;
-            o[i] = obj.offset();
+            a[i] = obj.azimuth;
+            e[i] = obj.elevation;
+            d[i] = obj.distance;
             ++i;
         }
-        table_.putValue("x", NetworkTableValue.makeIntegerArray(x));
-        table_.putValue("y", NetworkTableValue.makeIntegerArray(y));
-        table_.putValue("w", NetworkTableValue.makeIntegerArray(w));
-        table_.putValue("h", NetworkTableValue.makeIntegerArray(h));
-        table_.putValue("o", NetworkTableValue.makeDoubleArray(o));
+        table_.putValue("a", NetworkTableValue.makeDoubleArray(a));
+        table_.putValue("e", NetworkTableValue.makeDoubleArray(e));
+        table_.putValue("d", NetworkTableValue.makeDoubleArray(d));
         table_.putValue("len", NetworkTableValue.makeInteger(size));
     }
 
@@ -56,6 +52,13 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
     public void drawOnImageStateful(Mat img, Ref state) {
         for (VisionObject obj : state.inner) {
             Imgproc.rectangle(img, obj.tl(), obj.br(), rectColor, 2);
+            if (obj.hasAngles) {
+                double x = obj.br().x;
+                double y = obj.tl().y;
+                Imgproc.putText(img, String.format("d: %.2f", obj.distance), new Point(x + 5, y + 10), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, rectColor, 2);
+                Imgproc.putText(img, String.format("a: %.2f", obj.azimuth), new Point(x + 5, y + 30), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, rectColor, 2);
+                Imgproc.putText(img, String.format("e: %.2f", obj.elevation), new Point(x + 5, y + 50), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, rectColor, 2);
+            }
         }
     }
 }

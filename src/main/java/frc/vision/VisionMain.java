@@ -211,6 +211,7 @@ public class VisionMain {
                 ProcessorLoader.loadAll("fps", "april", "ring2024", "algae2025", "coral2025"),
                 table, visionDebug, exec
             );
+            procs.setCloneFrame(true);
 
             if (saveVideo) {
                 save = ProcessorLoader.load("save");
@@ -224,7 +225,6 @@ public class VisionMain {
                     .orElse("<none>");
                 log.write(String.format("Loaded processors: %s\n", names));
             }
-            
 
             ImShower imgs = new ImShower();
             if (visionDebug) {
@@ -245,7 +245,6 @@ public class VisionMain {
             log.flush();
 
             cams.start();
-
 
             System.out.println("Running successfully :3");
             

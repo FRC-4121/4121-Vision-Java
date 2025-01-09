@@ -7,17 +7,19 @@ import org.opencv.core.*;
 
 // Bean for camera config
 public class CameraConfig extends Typed {
-    public int width;
-    public int height;
-    public float fov;
+    public int width = -1;
+    public int height = -1;
+    public boolean enforceSize = false;
+    public float fov = -1;
     public ArrayList<String> vlibs;
     public int cropBottom;
     public int fpsThrottle = Integer.MAX_VALUE;
+    public int lockTimeout = Integer.MAX_VALUE;
 
     public void updateFrom(CameraConfig other) {
-        if (width == 0) width = other.width;
-        if (height == 0) height = other.height;
-        if (fov == 0) fov = other.fov;
+        if (width < 0) width = other.width;
+        if (height < 0) height = other.height;
+        if (fov < 0) fov = other.fov;
         if (other.vlibs != null) {
             if (vlibs == null) vlibs = other.vlibs;
             else vlibs.addAll(other.vlibs);

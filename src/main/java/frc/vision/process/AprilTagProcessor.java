@@ -44,12 +44,28 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
             
             return new Rect(new Point(minX, minY), new Point(maxX, maxY));
         }
+    
+        @Override
+        public void calcAngles(CameraConfig cfg) {
+            if (pose == null) super.calcAngles(cfg);
+            else {
+                Translation3d trans = pose.getTranslation();
+                double x = trans.getX();
+                double y = trans.getY();
+                double z = trans.getZ();
+                azimuth = Math.atan2(x, z);
+                elevation = -Math.atan2(y, z);
+                distance = Math.sqrt(x * x + y * y + z * z);
+                hasAngles = true;
+            }
+        }
     }
 
     public AprilTagProcessor(String name, Scalar rectColor, Scalar tagColor, AprilTagDetector detector) {
         super(name, rectColor);
         this.tagColor = tagColor;
         this.detector = detector;
+        this.calcAngles = true;
     }
 
     public AprilTagProcessor(String name, Scalar rectColor, Scalar tagColor, String family) {
@@ -137,23 +153,14 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         NetworkTable table_ = table.getSubTable(name);
         int size = state.inner.size();
         long[] ids = new long[size];
-        double[] homo = new double[size * 9];
-        double[] dists = new double[size];
         int i = 0;
         for (VisionObject obj : state.inner) {
             AprilTag obj_ = (AprilTag)obj;
             AprilTagDetection tag = obj_.found;
             ids[i] = tag.getId();
-            double[] mat = tag.getHomography();
-            for (int j = 0; j < 9; ++j) homo[i * 9 + j] = mat[j];
-            if (obj_.pose != null) {
-                dists[i] = obj_.pose.getTranslation().getNorm();
-            }
             ++i;
         }
         table_.putValue("ids", NetworkTableValue.makeIntegerArray(ids));
-        table_.putValue("homo", NetworkTableValue.makeDoubleArray(homo));
-        table_.putValue("dist", NetworkTableValue.makeDoubleArray(dists));
     }
 
     @Override
