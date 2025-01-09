@@ -10,14 +10,13 @@
         "vlibs": ["fps"]
     },
     "idx0": {
-        "fps": 30,
         "fov": 43,
         "type": "cv",
         "fourcc": "MJPG",
+        "vlibs": ["fps"],
         "index": 0
     },
     "idx2": {
-        "fps": 30,
         "fov": 43,
         "type": "cv",
         "fourcc": "MJPG",
@@ -44,17 +43,11 @@
         "fourcc": "YUYV",
         "port": [0, 1]
     },
-    "big-boy": {
-        "width": 800,
-        "height": 600,
-        "fps": 30,
-        "fov": 43,
-        "type": "cv",
-        "fourcc": "YUYV",
-        "port": [0, 1]
-    },
-    "idx0-bw": {
-        "fps": 30,
+    "tag-cam": {
+        "width": 1280,
+        "height": 0,
+        "enforceSize": false,
+        "skipConfig": false,
         "fov": 43,
         "type": "cv",
         "fourcc": "MJPG",
