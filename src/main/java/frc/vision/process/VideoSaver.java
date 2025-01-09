@@ -37,7 +37,7 @@ public class VideoSaver extends VisionProcessor {
         this(name, 30, savePath);
     }
     public VideoSaver(String name, double fps, File savePath) {
-        super(name);
+        super(name, null);
         this.savePath = savePath;
         this.targetFps = fps;
         this.cams = new ConcurrentHashMap<CameraBase, VideoWriter>();

@@ -17,8 +17,8 @@ public abstract class InstancedVisionProcessor<S> extends VisionProcessor {
     // The states for this processor.
     protected ConcurrentHashMap<CameraBase, Ref> states;
 
-    protected InstancedVisionProcessor(String name) {
-        super(name);
+    protected InstancedVisionProcessor(String name, ProcessorConfig cfg) {
+        super(name, cfg);
         states = new ConcurrentHashMap<CameraBase, Ref>();
     }
 

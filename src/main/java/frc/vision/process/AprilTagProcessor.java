@@ -61,25 +61,26 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         }
     }
 
-    public AprilTagProcessor(String name, Scalar rectColor, Scalar tagColor, AprilTagDetector detector) {
-        super(name, rectColor);
+    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, Scalar tagColor, AprilTagDetector detector) {
+        super(name, cfg, rectColor);
         this.tagColor = tagColor;
         this.detector = detector;
         this.calcAngles = true;
     }
 
-    public AprilTagProcessor(String name, Scalar rectColor, Scalar tagColor, String family) {
-        this(name, rectColor, tagColor);
+    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, Scalar tagColor, String family) {
+        this(name, cfg, rectColor, tagColor);
         detector.addFamily(family);
     }
 
-    public AprilTagProcessor(String name, Scalar rectColor, Scalar tagColor) {
-        this(name, rectColor, tagColor, new AprilTagDetector());
+    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, Scalar tagColor) {
+        this(name, cfg, rectColor, tagColor, new AprilTagDetector());
     }
 
-    public AprilTagProcessor(String name, Scalar rectColor, String family) {
+    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, String family) {
         this(
             name,
+            cfg,
             rectColor,
             new Scalar(
                 255 - rectColor.val[0],
@@ -90,9 +91,10 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         );
     }
 
-    public AprilTagProcessor(String name, Scalar rectColor) {
+    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor) {
         this(
             name,
+            cfg,
             rectColor,
             new Scalar(
                 255 - rectColor.val[0],
@@ -103,12 +105,12 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         );
     }
 
-    public AprilTagProcessor(String name, String family) {
-        this(name, new Scalar(0, 0, 255), family);
+    public AprilTagProcessor(String name, ProcessorConfig cfg, String family) {
+        this(name, cfg, new Scalar(0, 0, 255), family);
     }
 
-    public AprilTagProcessor(String name) {
-        this(name, new Scalar(0, 0, 255));
+    public AprilTagProcessor(String name, ProcessorConfig cfg) {
+        this(name, cfg, new Scalar(0, 0, 255));
     }
 
     public AprilTagDetector getDetector() {
@@ -209,7 +211,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         }
         @Override
         public AprilTagProcessor create(String name, ProcessorConfig cfg) {
-            AprilTagProcessor out = new AprilTagProcessor(name);
+            AprilTagProcessor out = new AprilTagProcessor(name, cfg);
             Config cfg_ = (Config)cfg;
             if (cfg_.family != null) {
                 for (String family : cfg_.family) {

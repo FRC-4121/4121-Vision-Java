@@ -11,11 +11,11 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
     public Scalar rectColor;
     protected boolean calcAngles;
 
-    protected ObjectVisionProcessor(String name) {
-        this(name, new Scalar(1.0, 0.0, 0.0));
+    protected ObjectVisionProcessor(String name, ProcessorConfig cfg) {
+        this(name, cfg, new Scalar(1.0, 0.0, 0.0));
     }
-    protected ObjectVisionProcessor(String name, Scalar color) {
-        super(name);
+    protected ObjectVisionProcessor(String name, ProcessorConfig cfg, Scalar color) {
+        super(name, cfg);
         rectColor = color;
     }
 

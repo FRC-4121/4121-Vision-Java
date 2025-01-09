@@ -20,7 +20,7 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
         this("FPS");
     }
     public FpsCounter(String name) {
-        super(name);
+        super(name, null);
     }
 
     @Override

@@ -7,11 +7,16 @@ import org.opencv.core.Mat;
 // Base class for vision processors
 public abstract class VisionProcessor {
     String name;
-    VisionProcessor(String name) {
+    ProcessorConfig config;
+    VisionProcessor(String name, ProcessorConfig config) {
         this.name = name;
+        this.config = config;
     }
     public String getName() {
         return name;
+    }
+    public ProcessorConfig getConfig() {
+        return config;
     }
     // Process the input image, given the image directly from the camera.
     // This must not modify img in any way!

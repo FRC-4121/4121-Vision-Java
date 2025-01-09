@@ -12,7 +12,7 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
     protected Config cfg;
 
     public RectVisionProcessor(String name, Config cfg) {
-        super(name, cfg.rectColor());
+        super(name, cfg, cfg.rectColor());
         this.cfg = cfg;
     }
     
