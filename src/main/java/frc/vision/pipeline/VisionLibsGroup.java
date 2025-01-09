@@ -14,47 +14,42 @@ import org.opencv.core.Mat;
 // Vision library group to handle dispatch from a frame to running vision processors.
 // Should be mostly non-blocking.
 public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
+    public static final int MAX_QUEUE = 0;
+    public static final int MAX_PROCS = 1;
     protected static class CamState {
-        CompletableFuture<Void> handle;
-        Mat frame;
+        ConcurrentHashMap<CompletableFuture<Void>, Integer> handles;
+        RingBuffer<Mat> frames;
+        AtomicInteger running;
         boolean loggedLibs;
 
         public CamState() {
-            handle = CompletableFuture.completedFuture(null);
-            frame = new Mat();
+            handles = new ConcurrentHashMap<>();
+            frames = new RingBuffer<>(MAX_QUEUE);
+            running = new AtomicInteger();
             loggedLibs = false;
         }
     }
     Executor exec;
-    CameraBase lastHandle;
     Collection<VisionProcessor> procs;
     NetworkTable table;
     BiConsumer<Mat, ? super CameraBase> postProcess;
     ConcurrentHashMap<CameraBase, CamState> states;
     boolean visionDebug;
-    boolean cloneFrame;
+
+    public static AtomicInteger ohfuck = new AtomicInteger();
+
 
     public VisionLibsGroup(Collection<VisionProcessor> procs, NetworkTable table, boolean visionDebug, Executor exec) {
         this.procs = procs;
         this.exec = exec;
         this.table = table;
         this.visionDebug = visionDebug;
-        this.cloneFrame = visionDebug;
 
         states = new ConcurrentHashMap<CameraBase, CamState>();
     }
 
     public void setPostProcess(BiConsumer<Mat, ? super CameraBase> callback) {
         postProcess = callback;
-    }
-
-    /// Make sure we have our own copy of the frame. Might not be necessary?
-    public void setCloneFrame(boolean cloneFrame) {
-        this.cloneFrame = cloneFrame;
-    }
-
-    public VisionLibsGroup clone() {
-        return new VisionLibsGroup(procs, table, visionDebug, exec);
     }
 
     private CamState getState(CameraBase cam) {
@@ -68,13 +63,8 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         if (frame == null) return;
         if (frame.dataAddr() == 0) return;
         CamState state = getState(cam);
-        synchronized(state) {
-            if (state.handle.isDone()) {
-                state.frame = frame;
-                scheduleSelf(cam, state);
-            }
-            // else state.ready.set(true);
-        }
+        state.frames.add(frame.clone());
+        scheduleSelf(cam, state);
     }
     public Stream<VisionProcessor> getLibs(Collection<String> vlibs) {
         return procs.stream().filter(proc -> vlibs == null || vlibs.size() == 0 || vlibs.contains(proc.getName()));
@@ -83,57 +73,81 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         procs.add(proc);
     }
     protected void scheduleSelf(CameraBase cam, CamState state) {
-        synchronized(state) {
-            if (!state.loggedLibs) {
-                String names = getLibs(cam.getConfig().vlibs)
-                    .map(p -> p.getName())
-                    .reduce((a, b) -> a + ", " + b)
-                    .orElse("<none>");
-                cam.getLog().write(String.format("Using processors: %s\n", names));
-                cam.getLog().flush();
-                state.loggedLibs = true;
-            }
-            // if (!cloneFrame) cam.getLock().lock();
-            Mat frame = cloneFrame ? state.frame.clone() : state.frame;
-            CompletableFuture<Void> future = CompletableFuture.allOf(
-                getLibs(cam.getConfig().vlibs)
-                    .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam), exec))
-                    .toArray(size -> new CompletableFuture[size])
-            );
-            // if (!cloneFrame) future = future.whenComplete((_void, _ex) -> cam.getLock().unlock());
-            if (table != null || visionDebug) {
-                future = future.thenCompose(_void -> {
-                    Stream<CompletableFuture<Void>> tables = Stream.empty();
-                    if (table != null) {
-                        NetworkTable subTable = table.getSubTable(cam.getName());
-                        tables = getLibs(cam.getConfig().vlibs)
-                            .map(proc -> CompletableFuture.runAsync(() -> proc.toNetworkTable(subTable, cam), exec));
-                    }
-                    Stream<CompletableFuture<Void>> drawings = !visionDebug
-                        ? Stream.empty()
-                        : getLibs(cam.getConfig().vlibs)
-                            .map(proc -> CompletableFuture.runAsync(() -> proc.drawOnImage(frame, cam), exec));
-                    return CompletableFuture.allOf(Stream.concat(tables, drawings).toArray(size -> new CompletableFuture[size]));
-                });
-            }
-            CompletableFuture fut = future
-                .thenRunAsync(() -> postProcess.accept(frame, cam), exec)
-                .exceptionally(e -> {
-                    e.printStackTrace(cam.getLog());
-                    return null;
-                });
-            state.handle = fut;
+        if (!state.loggedLibs) {
+            String names = getLibs(cam.getConfig().vlibs)
+                .map(p -> p.getName())
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("<none>");
+            cam.getLog().write(String.format("Using processors: %s\n", names));
+            cam.getLog().flush();
+            state.loggedLibs = true;
         }
+        if (state.running.getAndIncrement() >= MAX_PROCS) {
+            state.running.decrementAndGet();
+            return;
+        }
+        Mat frame = state.frames.remove();
+        if (frame == null) {
+            state.running.decrementAndGet();
+            return;
+        }
+        ohfuck.incrementAndGet();
+        CompletableFuture<Void> future = CompletableFuture.allOf(
+            getLibs(cam.getConfig().vlibs)
+                .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam), exec))
+                .toArray(size -> new CompletableFuture[size])
+        );
+        if (table != null || visionDebug) {
+            future = future.thenCompose(_void -> {
+                Stream<CompletableFuture<Void>> tables = Stream.empty();
+                if (table != null) {
+                    NetworkTable subTable = table.getSubTable(cam.getName());
+                    tables = getLibs(cam.getConfig().vlibs)
+                        .map(proc -> CompletableFuture.runAsync(() -> proc.toNetworkTable(subTable, cam), exec));
+                }
+                Stream<CompletableFuture<Void>> drawings = !visionDebug
+                    ? Stream.empty()
+                    : getLibs(cam.getConfig().vlibs)
+                        .map(proc -> CompletableFuture.runAsync(() -> proc.drawOnImage(frame, cam), exec));
+                return CompletableFuture.allOf(Stream.concat(tables, drawings).toArray(size -> new CompletableFuture[size]));
+            });
+        }
+        RecursiveFutureRemover cleanup = new RecursiveFutureRemover();
+        cleanup.cam = cam;
+        cleanup.state = state;
+        CompletableFuture fut = future
+            .thenRunAsync(() -> postProcess.accept(frame, cam), exec)
+            .exceptionally(e -> {
+                e.printStackTrace(cam.getLog());
+                return null;
+            })
+            .whenComplete(cleanup);
+        cleanup.handle = fut;
+        state.handles.put(fut, 0);
     }
     public void cancel() {
         for (CamState state : states.values()) {
-            state.handle.cancel(false);
+            for (CompletableFuture<Void> handle : state.handles.keySet()) handle.cancel(false);
         }
     }
     public boolean isRunning() {
         for (CamState state : states.values()) {
-            if (!state.handle.isDone()) return true;
+            for (CompletableFuture<Void> handle : state.handles.keySet()) if (!handle.isDone()) return true;
         }
         return false;
+    }
+
+    private class RecursiveFutureRemover implements BiConsumer<Object, Object> {
+        CameraBase cam;
+        CamState state;
+        CompletableFuture<Void> handle;
+
+        @Override
+        public void accept(Object _void, Object _ex) {
+            if (handle != null) state.handles.remove(handle);
+            state.running.decrementAndGet();
+            ohfuck.decrementAndGet();
+            scheduleSelf(cam, state);
+        }
     }
 }
