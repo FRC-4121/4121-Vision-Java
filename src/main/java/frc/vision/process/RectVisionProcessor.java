@@ -2,10 +2,10 @@ package frc.vision.process;
 
 import frc.vision.camera.CameraConfig;
 import frc.vision.load.ProcessorFactory;
-import frc.vision.load.Typed;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Map;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
@@ -13,11 +13,11 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
     protected Config cfg;
 
     public RectVisionProcessor(String name, Config cfg) {
-        super(name, cfg.rectColor());
+        super(name, cfg, cfg.rectColor());
         this.cfg = cfg;
     }
     
-    protected Collection<VisionObject> processObjects(Mat img, CameraConfig ccfg) {
+    protected Collection<VisionObject> processObjects(Mat img, CameraConfig ccfg, Map<String, VisionProcessor> _deps) {
         Mat raw = img.clone();
         Mat mat2 = new Mat();
         Imgproc.GaussianBlur(raw, mat2, new Size(13, 13), 0);
@@ -52,7 +52,7 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
         return out;
     }
 
-    public static class Config extends Typed {
+    public static class Config extends ProcessorConfig {
         int hmin = 0;
         int hmax = 255;
         int smin = 0;
@@ -106,7 +106,7 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
             return Config.class;
         }
         @Override
-        public RectVisionProcessor create(String name, Typed cfg) {
+        public RectVisionProcessor create(String name, ProcessorConfig cfg) {
             return new RectVisionProcessor(name, (Config)cfg);
         }
     }

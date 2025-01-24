@@ -3,6 +3,7 @@ package frc.vision.process;
 import edu.wpi.first.networktables.*;
 import frc.vision.camera.CameraConfig;
 import java.util.Collection;
+import java.util.Map;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
@@ -11,20 +12,20 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
     public Scalar rectColor;
     protected boolean calcAngles;
 
-    protected ObjectVisionProcessor(String name) {
-        this(name, new Scalar(1.0, 0.0, 0.0));
+    protected ObjectVisionProcessor(String name, ProcessorConfig cfg) {
+        this(name, cfg, new Scalar(1.0, 0.0, 0.0));
     }
-    protected ObjectVisionProcessor(String name, Scalar color) {
-        super(name);
+    protected ObjectVisionProcessor(String name, ProcessorConfig cfg, Scalar color) {
+        super(name, cfg);
         rectColor = color;
     }
 
     // Process the input image into a list of objects
-    protected abstract Collection<VisionObject> processObjects(Mat img, CameraConfig cfg);
+    protected abstract Collection<VisionObject> processObjects(Mat img, CameraConfig cfg, Map<String, VisionProcessor> deps);
     
     @Override
-    public void processStateful(Mat img, CameraConfig cfg, Ref state) {
-        state.inner = processObjects(img, cfg);
+    public void processStateful(Mat img, CameraConfig cfg, Map<String, VisionProcessor> deps, Ref state) {
+        state.inner = processObjects(img, cfg, deps);
         if (calcAngles) state.inner.forEach(obj -> obj.calcAngles(cfg));
     }
 
