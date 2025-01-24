@@ -3,11 +3,13 @@ package frc.vision.process;
 import edu.wpi.first.apriltag.*;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.networktables.*;
+import frc.vision.camera.CameraBase;
 import frc.vision.camera.CameraConfig;
 import frc.vision.load.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -60,6 +62,8 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
             }
         }
     }
+
+    public static ConcurrentHashMap<String, Collection<AprilTag>> seen = new ConcurrentHashMap<>();
 
     public AprilTagProcessor(String name, Scalar rectColor, Scalar tagColor, AprilTagDetector detector) {
         super(name, rectColor);
@@ -124,7 +128,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
     }
 
     @Override
-    protected Collection<VisionObject> processObjects(Mat img, CameraConfig cfg) {
+    protected Collection<VisionObject> processObjects(Mat img, CameraBase cam) {
         AprilTagDetection[] tags = new AprilTagDetection[0];
         Mat grayFrame = new Mat();
         switch (img.channels()) {
@@ -141,10 +145,12 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
             tags = detector.detect(grayFrame);
         }
         // unlike the detector, the estimator seems to just be a wrapper around the config
-        AprilTagPoseEstimator estimator = new AprilTagPoseEstimator(cfg.poseConfig());
-        return Arrays.stream(tags)
+        AprilTagPoseEstimator estimator = new AprilTagPoseEstimator(cam.getConfig().poseConfig());
+        Collection<AprilTag> tagCollection = Arrays.stream(tags)
             .map(obj -> new AprilTag(obj, estimator.estimate(obj)))
             .collect(Collectors.toList());
+        seen.put(cam.getName(), tagCollection);
+        return tagCollection.stream().collect(Collectors.toList());
     }
 
     @Override

@@ -1,5 +1,6 @@
 package frc.vision.process;
 
+import frc.vision.camera.CameraBase;
 import frc.vision.camera.CameraConfig;
 import frc.vision.load.ProcessorFactory;
 import frc.vision.load.Typed;
@@ -17,7 +18,8 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
         this.cfg = cfg;
     }
     
-    protected Collection<VisionObject> processObjects(Mat img, CameraConfig ccfg) {
+    protected Collection<VisionObject> processObjects(Mat img, CameraBase cam) {
+        CameraConfig ccfg = cam.getConfig();
         Mat raw = img.clone();
         Mat mat2 = new Mat();
         Imgproc.GaussianBlur(raw, mat2, new Size(13, 13), 0);
