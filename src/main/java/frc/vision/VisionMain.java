@@ -211,7 +211,6 @@ public class VisionMain {
                 ProcessorLoader.loadAll("fps", "april", "ring2024", "algae2025", "coral2025"),
                 table, visionDebug, exec
             );
-            procs.setCloneFrame(true);
 
             if (saveVideo) {
                 save = ProcessorLoader.load("save");
