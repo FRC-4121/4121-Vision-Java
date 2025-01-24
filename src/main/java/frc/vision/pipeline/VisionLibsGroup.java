@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.BiConsumer;
@@ -182,7 +184,34 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
                 future = future.thenCompose(_void -> {
                     return CompletableFuture.allOf(
                         state.plan.get(j).stream()
-                            .map(idx -> CompletableFuture.runAsync(() -> procs.get(idx).process(frame, cam, null), exec))
+                            .map(idx -> CompletableFuture.runAsync(() -> {
+                                Map<String, VisionProcessor> deps = null;
+                                VisionProcessor proc = procs.get(idx);
+                                var cfg = proc.getConfig();
+                                if (cfg != null) {
+                                    if (cfg.deps != null) {
+                                        class Pair {
+                                            String key;
+                                            Optional<VisionProcessor> value;
+
+                                            Pair(String key, Optional<VisionProcessor> value) {
+                                                this.key = key;
+                                                this.value = value;
+                                            }
+                                        }
+                                        deps = cfg.deps.entrySet().stream()
+                                            .map(e -> new Pair(
+                                                e.getKey(),
+                                                getLibs(cam.getConfig().vlibs)
+                                                    .filter(p -> p.getName().equals(e.getValue()))
+                                                    .findAny()
+                                            ))
+                                            .filter(p -> p.value.isPresent())
+                                            .collect(Collectors.toMap(p -> p.key, p -> p.value.get()));
+                                    }
+                                }
+                                proc.process(frame, cam, deps);
+                            }, exec))
                             .toArray(size -> new CompletableFuture[size])
                     );
                 });
