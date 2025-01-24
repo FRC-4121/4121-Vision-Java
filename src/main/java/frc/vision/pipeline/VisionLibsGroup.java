@@ -14,8 +14,8 @@ import org.opencv.core.Mat;
 // Vision library group to handle dispatch from a frame to running vision processors.
 // Should be mostly non-blocking.
 public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
-    public static final int MAX_QUEUE = 0;
-    public static final int MAX_PROCS = 1;
+    public static final int MAX_QUEUE = 4;
+    public static final int MAX_PROCS = 2;
     protected static class CamState {
         ConcurrentHashMap<CompletableFuture<Void>, Integer> handles;
         RingBuffer<Mat> frames;
@@ -35,9 +35,6 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     BiConsumer<Mat, ? super CameraBase> postProcess;
     ConcurrentHashMap<CameraBase, CamState> states;
     boolean visionDebug;
-
-    public static AtomicInteger ohfuck = new AtomicInteger();
-
 
     public VisionLibsGroup(Collection<VisionProcessor> procs, NetworkTable table, boolean visionDebug, Executor exec) {
         this.procs = procs;
@@ -91,7 +88,6 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
             state.running.decrementAndGet();
             return;
         }
-        ohfuck.incrementAndGet();
         CompletableFuture<Void> future = CompletableFuture.allOf(
             getLibs(cam.getConfig().vlibs)
                 .map(proc -> CompletableFuture.runAsync(() -> proc.process(frame, cam), exec))
@@ -146,7 +142,6 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         public void accept(Object _void, Object _ex) {
             if (handle != null) state.handles.remove(handle);
             state.running.decrementAndGet();
-            ohfuck.decrementAndGet();
             scheduleSelf(cam, state);
         }
     }
