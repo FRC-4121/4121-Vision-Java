@@ -49,7 +49,7 @@ public class VisionMain {
             switch (state) {
                 case NORMAL:
                     if (arg.charAt(0) == '-') {
-                            if (arg.charAt(1) == '-') {
+                        if (arg.charAt(1) == '-') {
                             String longFlag = arg.substring(2);
                             if (longFlag.equals("vision-debug")) {
                                 visionDebug = true;
