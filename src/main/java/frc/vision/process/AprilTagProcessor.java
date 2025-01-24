@@ -8,6 +8,7 @@ import frc.vision.load.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -126,7 +127,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
     }
 
     @Override
-    protected Collection<VisionObject> processObjects(Mat img, CameraConfig cfg) {
+    protected Collection<VisionObject> processObjects(Mat img, CameraConfig cfg, Map<String, VisionProcessor> _deps) {
         AprilTagDetection[] tags = new AprilTagDetection[0];
         Mat grayFrame = new Mat();
         switch (img.channels()) {

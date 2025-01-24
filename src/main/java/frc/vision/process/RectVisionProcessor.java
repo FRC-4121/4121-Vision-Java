@@ -5,6 +5,7 @@ import frc.vision.load.ProcessorFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Map;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
@@ -16,7 +17,7 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
         this.cfg = cfg;
     }
     
-    protected Collection<VisionObject> processObjects(Mat img, CameraConfig ccfg) {
+    protected Collection<VisionObject> processObjects(Mat img, CameraConfig ccfg, Map<String, VisionProcessor> _deps) {
         Mat raw = img.clone();
         Mat mat2 = new Mat();
         Imgproc.GaussianBlur(raw, mat2, new Size(13, 13), 0);

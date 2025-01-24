@@ -182,7 +182,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
                 future = future.thenCompose(_void -> {
                     return CompletableFuture.allOf(
                         state.plan.get(j).stream()
-                            .map(idx -> CompletableFuture.runAsync(() -> procs.get(idx).process(frame, cam), exec))
+                            .map(idx -> CompletableFuture.runAsync(() -> procs.get(idx).process(frame, cam, null), exec))
                             .toArray(size -> new CompletableFuture[size])
                     );
                 });

@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -70,13 +71,13 @@ public class VideoSaver extends VisionProcessor {
     }
 
     @Override
-    public void process(Mat img, CameraBase handle) {
+    public void process(Mat _img, CameraBase handle, Map<String, VisionProcessor> _deps) {
         register(handle);
     }
     @Override
-    public void toNetworkTable(NetworkTable table, CameraBase handle) {}
+    public void toNetworkTable(NetworkTable _table, CameraBase _handle) {}
     @Override
-    public void drawOnImage(Mat img, CameraBase handle) {
+    public void drawOnImage(Mat img, CameraBase _handle) {
         Size sz = img.size();
         Imgproc.circle(img, new Point(sz.width - 15, 15), 10, new Scalar(0, 0, 255), -1);
     }
