@@ -166,7 +166,7 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
             state.running.decrementAndGet();
             return;
         }
-        Mat frame = state.frames.remove();
+        Mat frame = state.frames.poll();
         if (frame == null) {
             state.running.decrementAndGet();
             return;
