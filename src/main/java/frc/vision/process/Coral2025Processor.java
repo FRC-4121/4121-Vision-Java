@@ -1,5 +1,9 @@
 package frc.vision.process;
 
+import edu.wpi.first.networktables.NetworkTable;
+import frc.vision.camera.CameraBase;
+import java.util.ArrayList;
+import java.util.Map;
 import org.opencv.core.*;
 
 
@@ -20,9 +24,9 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
     }
     public static class Config extends RectVisionProcessor.Config {
         // initial width, in april tag widths
-        public double iw = Double.INFINITY;
+        public double iw = Double.POSITIVE_INFINITY;
         // initial height, in april tag heights
-        public double ih = Double.INFINITY;
+        public double ih = Double.POSITIVE_INFINITY;
         // initial distance to the right, in april tag widths
         public double idx = 0;
         // initial distance upwards, in april tag heights
@@ -30,9 +34,9 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
         // initial distance between the coral plane and the tag plane, in april tag widths
         public double idz = 0;
         // maximum distance between the measured and expected center
-        public double dmax = Double.INFINITY;
+        public double dmax = Double.POSITIVE_INFINITY;
         // maximum aspect ratio difference
-        public double amax = Double.INFINITY;
+        public double amax = Double.POSITIVE_INFINITY;
         // maximum rotation difference
         public double rmax = Math.PI;
 
@@ -53,9 +57,12 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
         return (Config)super.getConfig();
     }
 
-    protected void processStateful(Mat img, CameraBase cam, Ref state) {}
+    @Override
+    protected void processStateful(Mat img, CameraBase cam, Map<String, VisionProcessor> deps, Ref state) {}
 
+    @Override
     protected void toNetworkTableStateful(NetworkTable table, Ref state) {}
 
+    @Override
     protected void drawOnImageStateful(Mat img, Ref state) {}
 }

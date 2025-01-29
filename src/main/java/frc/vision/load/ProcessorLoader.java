@@ -2,6 +2,7 @@ package frc.vision.load;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import frc.vision.process.ProcessorConfig;
 import frc.vision.process.VisionProcessor;
 import java.lang.reflect.Type;
 import java.io.FileNotFoundException;
@@ -19,8 +20,8 @@ public class ProcessorLoader {
     private static boolean configInitialized = false;
 
     protected static class WrappedConfig {
-        Typed inner;
-        public WrappedConfig(Typed inner) {
+        ProcessorConfig inner;
+        public WrappedConfig(ProcessorConfig inner) {
             this.inner = inner;
         }
     }
@@ -31,12 +32,12 @@ public class ProcessorLoader {
             JsonObject obj = json.getAsJsonObject();
             String ty = obj.get("type").getAsString();
             ProcessorFactory factory = types.get(ty);
-            Typed cfg = context.deserialize(json, factory.configType());
+            ProcessorConfig cfg = context.deserialize(json, factory.configType());
             return new WrappedConfig(cfg);
         }
     }
 
-    protected ProcessorLoader() {}
+    private ProcessorLoader() {}
 
     // Initialize configs from a file, in JSON.
     public static void initConfig(Reader file) throws JsonSyntaxException, JsonIOException {
@@ -67,7 +68,7 @@ public class ProcessorLoader {
     // TODO: give better exceptions.
     public static VisionProcessor load(String name) {
         WrappedConfig wcfg = configs.get(name);
-        Typed cfg = wcfg.inner;
+        ProcessorConfig cfg = wcfg.inner;
         ProcessorFactory factory = types.get(cfg.type);
         return factory.create(name, cfg);
     }

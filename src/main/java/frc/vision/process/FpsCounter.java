@@ -4,6 +4,7 @@ import edu.wpi.first.networktables.*;
 import frc.vision.camera.CameraBase;
 import frc.vision.load.*;
 import java.time.*;
+import java.util.Map;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
@@ -20,11 +21,11 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
         this("FPS");
     }
     public FpsCounter(String name) {
-        super(name);
+        super(name, null);
     }
 
     @Override
-    protected void processStateful(Mat _img, CameraBase _cfg, Ref state) {
+    protected void processStateful(Mat _img, CameraBase _cfg, Map<String, VisionProcessor> _deps, Ref state) {
         if (state.inner == null) {
             state.inner = new State();
             state.inner.minFps = Float.POSITIVE_INFINITY;
@@ -75,7 +76,7 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
             return "fps";
         }
         @Override
-        public FpsCounter create(String name, Typed cfg) {
+        public FpsCounter create(String name, ProcessorConfig cfg) {
             return new FpsCounter(name);
         }
     }
