@@ -2,6 +2,7 @@ package frc.vision.process;
 
 import edu.wpi.first.networktables.*;
 import frc.vision.camera.CameraBase;
+import frc.vision.load.ProcessorFactory;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -74,6 +75,20 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
         public ArrayList<Integer> recognizedTags = new ArrayList<>();
         // available positions to search for
         public ArrayList<Position> positions = new ArrayList<>();
+    }
+    public static class Factory extends ProcessorFactory {
+        @Override
+        public String typeName() {
+            return "coral";
+        }
+        @Override
+        public Class<Config> configType() {
+            return Config.class;
+        }
+        @Override
+        public Coral2025Processor create(String name, ProcessorConfig cfg) {
+            return new Coral2025Processor(name, (Config)cfg);
+        }
     }
 
     public Coral2025Processor(String name, Config cfg) {
