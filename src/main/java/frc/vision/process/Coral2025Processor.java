@@ -101,13 +101,12 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
     }
 
     @Override
-    protected void processStateful(Mat img, CameraBase cam, Map<String, VisionProcessor> deps, Ref state) {
+    protected synchronized void processStateful(Mat img, CameraBase cam, Map<String, VisionProcessor> deps, Ref state) {
         Config cfg = getConfig();
 
         state.inner = new State();
 
-        if (cfg.tagCam == null) return;
-        var seen = AprilTagProcessor.seen.get(cfg.tagCam);
+        var seen = AprilTagProcessor.seen.get(cfg.tagCam == null ? cam.getName() : cfg.tagCam);
         if (seen == null) return;
 
         var tags = seen.stream()
@@ -119,13 +118,29 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
                 double w = cfg.iw * a.width;
                 double h = cfg.ih * a.height;
                 double x = (cfg.idx + cfg.idz * Math.sin(a.approachAngle)) * a.width;
-                double y = cfg.idy * a.height;
-                return new Rect((int)x, (int)y, (int)w, (int)h);
+                double y = cfg.idy * -a.height;
+                return new Rect(a.x + (int)x, a.y + (int)(y - 2 * h), (int)w, (int)h);
             })
             .reduce((a, b) -> mergeRects(a, b))
             .orElse(null);
 
         if (crop == null) return;
+
+        if (crop.x < 0) {
+            crop.width += crop.x;
+            crop.x = 0;
+        }
+        if (crop.y < 0) {
+            crop.height += crop.y;
+            crop.y = 0;
+        }
+        int ox = crop.x + crop.width - img.cols();
+        if (ox > 0) crop.width -= ox;
+        int oy = crop.y + crop.height - img.rows();
+        if (oy > 0) crop.height -= oy;
+        if (crop.area() <= cfg.minArea) return;
+
+        Mat cropped = new Mat(img, crop);
 
         TaggedRect[] rects = Arrays.stream(tags)
             .flatMap(a -> {
@@ -134,9 +149,9 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
                     Position p = cfg.positions.get(i);
                     double angle = Math.atan(Math.tan(p.angle) / sa);
                     double x = (p.x + p.z * sa) * a.width;
-                    double y = p.y * a.height;
+                    double y = p.y * -a.height;
                     return new TaggedRect(
-                        new RotatedRect(new Point(x, y), new Size(cfg.width, cfg.height), angle),
+                        new RotatedRect(new Point(a.x + x, a.y + y), new Size(cfg.width, cfg.height), angle),
                         a.getId() * cfg.positions.size() + i
                     );
                 });
@@ -146,8 +161,6 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
         state.inner.overallCrop = crop;
         state.inner.zones = Arrays.asList(rects);
         state.inner.detections = new ArrayList<>();
-
-        Mat cropped = crop == null ? img : new Mat(img, crop);
 
         Mat m1 = new Mat(); // blurred, reused for filtered
         Imgproc.blur(cropped, m1, new Size(3, 3));
@@ -161,7 +174,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
             m1
         );
         Imgproc.GaussianBlur(m1, m2, new Size(5, 5), 0);
-        
+
         ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         Imgproc.findContours(m2, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         contours.sort(Comparator.comparing(c -> Integer.MAX_VALUE - Imgproc.contourArea(c)));
@@ -193,7 +206,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
     }
 
     @Override
-    protected void drawOnImageStateful(Mat img, Ref state) {
+    protected synchronized void drawOnImageStateful(Mat img, Ref state) {
         if (state.inner.overallCrop == null) return;
         Imgproc.rectangle(
             img,
@@ -207,6 +220,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
         for (TaggedRect zone : state.inner.zones) {
             MatOfPoint points = new MatOfPoint();
             Imgproc.boxPoints(zone, points);
+            // System.out.println(points.dump());
             pts.add(points);
         }
         ArrayList<MatOfPoint> good = new ArrayList<>();
@@ -217,9 +231,9 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
             if (detect.zone == Integer.MAX_VALUE) bad.add(points);
             else good.add(points);
         }
-        Imgproc.drawContours(img, pts,  -1, new Scalar(0, 0, 0));
-        Imgproc.drawContours(img, good, -1, new Scalar(0, 255, 0));
-        Imgproc.drawContours(img, bad,  -1, new Scalar(0, 0, 255));
+        Imgproc.polylines(img, pts,  true, new Scalar(0, 0, 0), 2);
+        Imgproc.polylines(img, good, true, new Scalar(0, 255, 0), 2);
+        Imgproc.polylines(img, bad,  true, new Scalar(0, 0, 255), 2);
     }
 
     private static Rect mergeRects(Rect a, Rect b) {

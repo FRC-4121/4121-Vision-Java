@@ -35,7 +35,7 @@
        "minArea": 1200
     },
     "coral2025": {
-        "type": "rect",
+        "type": "coral",
         "height": 11,
         "width": 4,
         "tolerance": 0.2,
@@ -53,10 +53,10 @@
         "amax": 1.5,
         "rmax": 0.1,
 
-        "idx": -1,
-        "idy": -9,
+        "idx": -0.75,
+        "idy": -8.5,
         "idz": 0,
-        "iw": 2,
+        "iw": 2.5,
         "ih": 9,
 
         "tagCam": "usb3",
