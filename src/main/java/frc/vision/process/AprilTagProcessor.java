@@ -22,6 +22,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
     public class AprilTag extends VisionObject {
         public AprilTagDetection found;
         public Transform3d pose;
+        public double approachAngle;
 
         public AprilTag(AprilTagDetection found, Transform3d pose) {
             super(rectFromTag(found));
@@ -59,8 +60,13 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
                 azimuth = Math.atan2(x, z);
                 elevation = -Math.atan2(y, z);
                 distance = Math.sqrt(x * x + y * y + z * z);
+                approachAngle = pose.getRotation().getY();
                 hasAngles = true;
             }
+        }
+
+        public int getId() {
+            return found.getId();
         }
     }
 
