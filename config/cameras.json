@@ -41,7 +41,8 @@
         "fov": 43,
         "type": "cv",
         "fourcc": "YUYV",
-        "port": [0, 1]
+        "port": [0, 1],
+        "vlibs": ["fps", "april", "coral2025"]
     },
     "tag-cam": {
         "width": 1280,

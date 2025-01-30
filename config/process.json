@@ -12,7 +12,7 @@
         "type": "rect",
         "height": 2.8,
         "width": 14,
-        "tolerance": 1,
+        "tolerance": 0,
         "hmin": 0,
         "hmax": 14,
         "smin": 180,
@@ -26,12 +26,12 @@
        "height": 16,
        "width": 16,
        "tolerance": 0.1,
-       "hmin": 65,
-       "hmax": 101,
+       "hmin": 67,
+       "hmax": 99,
        "smin": 75,
        "smax": 255,
        "vmin": 16,
-       "vmax": 179,
+       "vmax": 169,
        "minArea": 1200
     },
     "coral2025": {
@@ -41,11 +41,33 @@
         "tolerance": 0.2,
         "minArea": 1000,
         "maxArea": 0,
-        "hmin": 0,
-        "hmax": 255,
-        "smin": 0,
-        "smax": 60,
-        "vmin": 105,
-        "vmax": 215
+
+        "hmin": 19,
+        "hmax": 32,
+        "smin": 26,
+        "smax": 211,
+        "vmin": 125,
+        "vmax": 162,
+
+        "dmax2": 100,
+        "amax": 1.5,
+        "rmax": 0.1,
+
+        "idx": -1,
+        "idy": -9,
+        "idz": 0,
+        "iw": 2,
+        "ih": 9,
+
+        "tagCam": "usb3",
+        "recognizedTags": [2],
+        "positions": [
+            { "x":  0.962, "y": 1.84, "z": 1.02, "angle": 0.61 },
+            { "x": -0.962, "y": 1.84, "z": 1.02, "angle": 0.61 },
+            { "x":  0.962, "y": 4.27, "z": 1.02, "angle": 0.61 },
+            { "x": -0.962, "y": 4.27, "z": 1.02, "angle": 0.61 },
+            { "x":  0.962, "y": 8.11, "z": 0.17, "angle": 0 },
+            { "x": -0.962, "y": 8.11, "z": 0.17, "angle": 0 }
+        ]
     }
 }
