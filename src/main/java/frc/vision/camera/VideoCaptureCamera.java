@@ -230,7 +230,7 @@ public class VideoCaptureCamera extends CameraBase {
                 }
             }
             int port5 = map5[num];
-            f = new File(String.format("/sys/devices/platform/axi/1000120000.pcie/1f00%1$d00000.usb/xhci-hcd.%2$d/usb%2$d/%2$d-%3$d/%2$d-%3$d:1.0/video4linux",
+            f = new File(String.format("/sys/devices/platform/axi/1000120000.pcie/1f00%1$d00000.usb/xhci-hcd.%2$d/usb%3$d/%3$d-%4$d/%3$d-%4$d:1.0/video4linux",
                 port5 % 2 + 2, port5 % 2, port5 % 2 * 2 + 1, port5 / 2 + 1
             ));
             if (f.exists()) {
