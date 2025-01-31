@@ -8,6 +8,8 @@ public class VisionObject extends Rect {
     public double distance;
     public double azimuth;
     public double elevation;
+    public double offset;
+    public double rotation;
     public boolean hasAngles;
 
     VisionObject() {}

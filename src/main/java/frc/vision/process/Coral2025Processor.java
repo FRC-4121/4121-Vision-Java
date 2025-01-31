@@ -117,7 +117,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
             .map(a -> {
                 double w = cfg.iw * a.width;
                 double h = cfg.ih * a.height;
-                double x = (cfg.idx + cfg.idz * Math.sin(a.approachAngle)) * a.width;
+                double x = (cfg.idx + cfg.idz * Math.sin(a.rotation)) * a.width;
                 double y = cfg.idy * -a.height;
                 return new Rect((int)(a.getX() + x), (int)(a.getY() + y - 2 * h), (int)w, (int)h);
             })
@@ -144,7 +144,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
 
         TaggedRect[] rects = Arrays.stream(tags)
             .flatMap(a -> {
-                double sa = Math.sin(a.approachAngle);
+                double sa = Math.sin(a.rotation);
                 return IntStream.range(0, cfg.positions.size()).mapToObj(i -> {
                     Position p = cfg.positions.get(i);
                     double angle = -Math.atan(Math.tan(p.angle) / sa);

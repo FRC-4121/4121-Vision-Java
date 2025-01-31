@@ -17,7 +17,7 @@ public class RectVisionProcessor extends ObjectVisionProcessor {
         super(name, cfg, cfg.rectColor());
         this.cfg = cfg;
     }
-    
+
     protected Collection<VisionObject> processObjects(Mat img, CameraBase cam, Map<String, VisionProcessor> _deps) {
         CameraConfig ccfg = cam.getConfig();
         Mat raw = img.clone();

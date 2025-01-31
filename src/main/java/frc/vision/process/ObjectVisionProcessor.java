@@ -22,7 +22,7 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
 
     // Process the input image into a list of objects
     protected abstract Collection<VisionObject> processObjects(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps);
-    
+
     @Override
     public void processStateful(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps, Ref state) {
         state.inner = processObjects(img, cfg, deps);
@@ -37,15 +37,22 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
         double[] a = new double[size];
         double[] e = new double[size];
         double[] d = new double[size];
+        double[] r = new double[size];
+        double[] o = new double[size];
         for (VisionObject obj : state.inner) {
             a[i] = obj.azimuth;
             e[i] = obj.elevation;
             d[i] = obj.distance;
+            r[i] = obj.rotation;
+            o[i] = obj.offset;
             ++i;
         }
         table_.putValue("a", NetworkTableValue.makeDoubleArray(a));
         table_.putValue("e", NetworkTableValue.makeDoubleArray(e));
         table_.putValue("d", NetworkTableValue.makeDoubleArray(d));
+        table_.putValue("r", NetworkTableValue.makeDoubleArray(r));
+        table_.putValue("o", NetworkTableValue.makeDoubleArray(o));
+
         table_.putValue("len", NetworkTableValue.makeInteger(size));
     }
 
@@ -59,6 +66,8 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
                 Imgproc.putText(img, String.format("d: %.2f", obj.distance), new Point(x + 5, y + 10), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, rectColor, 2);
                 Imgproc.putText(img, String.format("a: %.2f", obj.azimuth), new Point(x + 5, y + 30), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, rectColor, 2);
                 Imgproc.putText(img, String.format("e: %.2f", obj.elevation), new Point(x + 5, y + 50), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, rectColor, 2);
+                Imgproc.putText(img, String.format("r: %.2f", obj.rotation), new Point(x + 5, y + 70), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, rectColor, 2);
+                Imgproc.putText(img, String.format("o: %.2f", obj.offset), new Point(x + 5, y + 90), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, rectColor, 2);
             }
         }
     }

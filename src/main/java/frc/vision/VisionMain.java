@@ -161,7 +161,7 @@ public class VisionMain {
         if (camNames.isEmpty()) {
             System.err.println("No cameras were specified!");
         }
- 
+
         long pid = ProcessHandle.current().pid();
         System.out.println("PID: " + pid);
         LocalDateTime time = LocalDateTime.now();
@@ -175,7 +175,7 @@ public class VisionMain {
         String filename = String.format(logNameFormat, camNamesStr, CameraBase.logDateFormat.format(time), pid);
         File runLog = new File(runLogs, filename);
         PrintWriter log = new PrintWriter(runLog);
-        
+
         CameraGroup cams = null;
 
         VisionProcessor save = null;
@@ -242,13 +242,13 @@ public class VisionMain {
                     .orElse("<none>");
                 log.write(String.format("Loaded cameras: %s\n", names));
             }
-            
+
             log.flush();
 
             cams.start();
 
             System.out.println("Running successfully :3 :D");
-            
+
             while (true) {
                 if (visionDebug) {
                     imgs.run();

@@ -21,7 +21,7 @@ import org.opencv.core.Mat;
 // Should be mostly non-blocking.
 public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     public static final int MAX_QUEUE = 4;
-    public static final int MAX_PROCS = 2;
+    public static final int MAX_PROCS = 1; // I want real framerate
     protected class CamState {
         ConcurrentHashMap<CompletableFuture<Void>, Integer> handles;
         RingBuffer<Mat> frames;

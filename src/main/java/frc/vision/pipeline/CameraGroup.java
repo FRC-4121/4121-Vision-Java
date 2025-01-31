@@ -46,7 +46,7 @@ public class CameraGroup {
         out.finish();
         return out;
     }
-    
+
     // Load the given cameras by name, then finalize them.
     public static CameraGroup of(Iterable<String> names) throws IOException {
         CameraGroup out = new CameraGroup();

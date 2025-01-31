@@ -55,7 +55,7 @@ public class CameraLoader {
         }
         Gson gson = builder.create();
         configs = gson.fromJson(file, new TypeToken<HashMap<String, WrappedConfig>>() {}.getType());
-        
+
         for (Map.Entry<String, WrappedConfig> entry : configs.entrySet()) {
             if (entry.getKey() == "default") continue;
             WrappedConfig default_ = configs.get("default");
