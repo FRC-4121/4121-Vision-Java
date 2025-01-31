@@ -95,7 +95,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
             else this.frame = frame;
             Imgproc.rectangle(frame, new Point(0, frame.rows() - config.cropBottom), new Point(frame.cols(), frame.rows()), new Scalar(0));
             return frame;
-        } 
+        }
         catch (NullPointerException e) {
             throw e;
         }

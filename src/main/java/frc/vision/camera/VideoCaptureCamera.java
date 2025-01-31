@@ -32,15 +32,15 @@ public class VideoCaptureCamera extends CameraBase {
         backoff = 1;
         currentFrame = new Mat();
         if (cfg.index != null) {
-            cap = new VideoCapture(cfg.index);
+            cap = new VideoCapture(cfg.index, Videoio.CAP_V4L2);
         } else if (cfg.path != null) {
-            cap = new VideoCapture(cfg.path);
+            cap = new VideoCapture(cfg.path, Videoio.CAP_V4L2);
         } else if (cfg.port != null) {
             String path = cfg.port.resolve();
             if (path == null) {
                 log.write(String.format("Couldn't find a camera on port %s\n", cfg.port));
             } else {
-                cap = new VideoCapture(path);
+                cap = new VideoCapture(path, Videoio.CAP_V4L2);
             }
         } else {
             log.write("No way to select a camera was given!\n");
@@ -65,16 +65,16 @@ public class VideoCaptureCamera extends CameraBase {
             log.write("Reloading camera\n");
             Config cfg = (Config)config;
             if (cfg.index != null) {
-                cap.open(cfg.index);
+                cap.open(cfg.index, Videoio.CAP_V4L2);
             } else if (cfg.path != null) {
-                cap.open(cfg.path);
+                cap.open(cfg.path, Videoio.CAP_V4L2);
             } else if (cfg.port != null) {
                 try {
                     String path = cfg.port.resolve();
                     if (path == null) {
                         log.write(String.format("Couldn't find a camera on port %s\n", cfg.port));
                     } else {
-                        cap = new VideoCapture(path);
+                        cap = new VideoCapture(path, Videoio.CAP_V4L2);
                     }
                 } catch (Exception e) {
                     log.write("Port resolution failed with an exception:\n");
@@ -137,7 +137,7 @@ public class VideoCaptureCamera extends CameraBase {
             }
         }
     }
-    
+
     @Override
     public Mat readFrameRaw() {
         if (cap == null) return null;
@@ -145,6 +145,7 @@ public class VideoCaptureCamera extends CameraBase {
         if (ok) {
             if (!wasOpened) {
                 log.write("We got the camera back!\n");
+                log.flush();
                 wasOpened = true;
             }
             failCount = 0;
@@ -155,6 +156,7 @@ public class VideoCaptureCamera extends CameraBase {
             if (failCount > 5) {
                 if (wasOpened) {
                     log.write("Lost the camera\n");
+                    log.flush();
                     wasOpened = false;
                 }
                 if (counter == 0) {
@@ -167,7 +169,6 @@ public class VideoCaptureCamera extends CameraBase {
             }
         }
         log.flush();
-        // System.out.println(currentFrame.size());
         return ok ? currentFrame : null;
     }
 
