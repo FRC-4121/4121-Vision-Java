@@ -24,14 +24,14 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
     public static final int MAX_PROCS = 1; // I want real framerate
     protected class CamState {
         ConcurrentHashMap<CompletableFuture<Void>, Integer> handles;
-        RingBuffer<Mat> frames;
+        RingBuffer frames;
         AtomicInteger running;
         ArrayList<ArrayList<Integer>> plan;
         boolean loggedLibs;
 
         public CamState() {
             handles = new ConcurrentHashMap<>();
-            frames = new RingBuffer<>(MAX_QUEUE);
+            frames = new RingBuffer(MAX_QUEUE);
             running = new AtomicInteger();
             loggedLibs = false;
         }
@@ -143,11 +143,11 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         if (frame == null) return;
         if (frame.dataAddr() == 0) return;
         CamState state = getState(cam);
-        state.frames.add(frame.clone());
+        state.frames.add(frame);
         scheduleSelf(cam, state);
     }
     public Stream<VisionProcessor> getLibs(Collection<String> vlibs) {
-        return procs.stream().filter(proc -> vlibs == null || vlibs.size() == 0 || vlibs.contains(proc.getName()));
+        return procs.stream().filter(proc -> vlibs == null || vlibs.contains(proc.getName()));
     }
     public void add(VisionProcessor proc) {
         procs.add(proc);
@@ -233,10 +233,10 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
             .exceptionally(e -> {
                 e.printStackTrace(cam.getLog());
                 return null;
-            })
-            .whenComplete(cleanup);
+            });
         cleanup.handle = fut;
         state.handles.put(fut, 0);
+        fut.whenCompleteAsync(cleanup, exec);
     }
     public void cancel() {
         for (CamState state : states.values()) {
@@ -256,8 +256,13 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         CompletableFuture<Void> handle;
 
         @Override
-        public void accept(Object _void, Object _ex) {
-            if (handle != null) state.handles.remove(handle);
+        public synchronized void accept(Object _void, Object _ex) {
+            if (handle != null) {
+                state.handles.remove(handle);
+            } else {
+                cam.getLog().write("NULL handle, nothing to cleanup");
+                cam.getLog().flush();
+            }
             state.running.decrementAndGet();
             scheduleSelf(cam, state);
         }

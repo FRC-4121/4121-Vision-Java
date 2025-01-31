@@ -1,30 +1,28 @@
 package frc.vision.pipeline;
 
-import java.util.ArrayList;
+import org.opencv.core.Mat;
 
 /**
  * A queue based on a circular buffer.
  *
  * If the capacity is exceeded, the oldest elements are removed. Note that this doesn't actually implement Queue because I'm too lazy to implement all of the Collection methods
  */
-public class RingBuffer<E> {
-    protected ArrayList<E> elems;
-    protected int cap;
+public class RingBuffer {
+    protected Mat[] elems;
     protected int start;
     protected int end;
 
     public RingBuffer(int capacity) {
-        elems = new ArrayList<>(capacity + 1);
-        cap = capacity + 1;
+        elems = new Mat[capacity + 1];
         start = 0;
         end = 0;
     }
 
     public int capacity() {
-        return cap;
+        return modulus() - 1;
     }
     private int modulus() {
-        return capacity() + 1;
+        return elems.length;
     }
     public synchronized int size() {
         int len = end - start;
@@ -32,36 +30,36 @@ public class RingBuffer<E> {
         return len;
     }
 
-    public synchronized boolean add(E elem) {
-        if (end == elems.size()) elems.add(elem);
-        else elems.set(end, elem);
+    public synchronized boolean add(Mat elem) {
+        if (elems[end] == null) elems[end] = new Mat();
+        elem.copyTo(elems[end]);
         if (++end == modulus()) {
             end = 0;
         }
         if (start == end && ++start == modulus()) start = 0;
         return true;
     }
-    public boolean offer(E elem) {
+    public boolean offer(Mat elem) {
         return add(elem);
     }
-    public synchronized E remove() {
+    public synchronized Mat remove() {
         if (start == end) throw new IllegalStateException("Attempted to remove from an empty queue");
-        E out = elems.get(start++);
+        Mat out = elems[start++];
         if (start == modulus()) start = 0;
         return out;
     }
-    public synchronized E poll() {
+    public synchronized Mat poll() {
         if (start == end) return null;
-        E out = elems.get(start++);
+        Mat out = elems[start++];
         if (start == modulus()) start = 0;
         return out;
     }
-    public synchronized E element() {
+    public synchronized Mat element() {
         if (start == end) throw new IllegalStateException("Attempted to get first element of an empty queue");
-        return elems.get(start);
+        return elems[start];
     }
-    public synchronized E peek() {
-        return start == end ? null : elems.get(start);
+    public synchronized Mat peek() {
+        return start == end ? null : elems[start];
     }
 
     public void clear() {
