@@ -28,6 +28,10 @@ public class VisionMain {
         NAME,
     };
 
+    private static class Ref<T> {
+        T inner;
+    }
+
     protected static final String logNameFormat = "log_%s_%s_%d.txt";
 
     public static void main(String[] args) throws Exception {
@@ -176,9 +180,28 @@ public class VisionMain {
         File runLog = new File(runLogs, filename);
         PrintWriter log = new PrintWriter(runLog);
 
-        CameraGroup cams = null;
+        Ref<VisionProcessor> save = new Ref<>();
+        Ref<CameraGroup> cams_ = new Ref<>();
 
-        VisionProcessor save = null;
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (cams_.inner != null) {
+                cams_.inner.cancel();
+                cams_.inner.flushLogs();
+            }
+            if (save.inner != null && save.inner instanceof VideoSaver) {
+                VideoSaver saver = (VideoSaver)save.inner;
+                log.write(
+                    String.format(
+                        "Video writing lost %dms over %d frames, avg loss is %dms\n",
+                        saver.lostTime.toMillis(),
+                        saver.framesWritten,
+                        saver.lostTime.dividedBy(saver.framesWritten).toMillis()
+                    )
+                );
+            }
+            log.write(String.format("Run ended at %s\n", String.valueOf(LocalDateTime.now())));
+            log.flush();
+        }));
 
         try {
             log.write(String.format("Running with PID %d at %s\n", pid, time));
@@ -215,8 +238,8 @@ public class VisionMain {
             );
 
             if (saveVideo) {
-                save = ProcessorLoader.load("save");
-                procs.add(save);
+                save.inner = ProcessorLoader.load("save");
+                procs.add(save.inner);
             }
 
             {
@@ -232,8 +255,9 @@ public class VisionMain {
                procs.setPostProcess(imgs);
             }
 
-            cams = CameraGroup.of(camNames);
+            CameraGroup cams = CameraGroup.of(camNames);
             cams.setCallback(procs);
+            cams_.inner = cams;
 
             {
                 String names = cams.getCams()
@@ -268,21 +292,6 @@ public class VisionMain {
         } catch (Exception e) {
             e.printStackTrace(log);
             if (echoErrors) e.printStackTrace();
-        } finally {
-            if (cams != null) cams.flushLogs();
-            log.write(String.format("Run ended at %s\n", String.valueOf(LocalDateTime.now())));
-            if (save != null && save instanceof VideoSaver) {
-                VideoSaver saver = (VideoSaver)save;
-                log.write(
-                    String.format(
-                        "Video writing lost %dms over %d frames, avg loss is %dms\n",
-                        saver.lostTime.toMillis(),
-                        saver.framesWritten,
-                        saver.lostTime.dividedBy(saver.framesWritten).toMillis()
-                    )
-                );
-            }
-            log.flush();
         }
     }
 }
