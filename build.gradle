@@ -54,7 +54,7 @@ tasks.register("saveClasspath") {
 tasks.register("setupRunScript") {
     def path = sourceSets.main.runtimeClasspath.asPath
     def f = file("$buildDir/run.sh")
-    f.setText("#!/bin/sh\nexport CLASSPATH=\"$path\"\nexport LD_PRELOAD=\"\$(find ~/.wpilib/nativecache -name '*wpiutil*' | paste -sd :)\"\njava -agentlib:jdwp=transport=dt_socket,server=y,suspend=n frc.vision.VisionMain \"\$@\"")
+    f.setText("#!/bin/sh\nexport CLASSPATH=\"$path\"\nexport LD_PRELOAD=\"\$(find \"\${NATIVECACHE:-\$HOME/.wpilib/nativecache}\" -name '*wpiutil*' | paste -sd :)\"\njava -agentlib:jdwp=transport=dt_socket,server=y,suspend=n frc.vision.VisionMain \"\$@\"")
     f.setExecutable(true)
     dependsOn "compileJava"
 }
