@@ -68,6 +68,14 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         public int getId() {
             return found.getId();
         }
+
+        public double getX() {
+            return found.getCenterX();
+        }
+
+        public double getY() {
+            return found.getCenterY();
+        }
     }
 
     public static ConcurrentHashMap<String, Collection<AprilTag>> seen = new ConcurrentHashMap<>();

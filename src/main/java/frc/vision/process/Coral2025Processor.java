@@ -119,7 +119,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
                 double h = cfg.ih * a.height;
                 double x = (cfg.idx + cfg.idz * Math.sin(a.approachAngle)) * a.width;
                 double y = cfg.idy * -a.height;
-                return new Rect(a.x + (int)x, a.y + (int)(y - 2 * h), (int)w, (int)h);
+                return new Rect((int)(a.getX() + x), (int)(a.getY() + y - 2 * h), (int)w, (int)h);
             })
             .reduce((a, b) -> mergeRects(a, b))
             .orElse(null);
@@ -147,11 +147,11 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
                 double sa = Math.sin(a.approachAngle);
                 return IntStream.range(0, cfg.positions.size()).mapToObj(i -> {
                     Position p = cfg.positions.get(i);
-                    double angle = Math.atan(Math.tan(p.angle) / sa);
-                    double x = (p.x + p.z * sa) * a.width;
+                    double angle = -Math.atan(Math.tan(p.angle) / sa);
+                    double x = (p.x - p.z * sa) * a.width;
                     double y = p.y * -a.height;
                     return new TaggedRect(
-                        new RotatedRect(new Point(a.x + x, a.y + y), new Size(cfg.width, cfg.height), angle),
+                        new RotatedRect(new Point(a.getX() + x, a.getY() + y), new Size(cfg.width * a.height / 6.5, cfg.height * a.height / 6.5), angle),
                         a.getId() * cfg.positions.size() + i
                     );
                 });
@@ -183,6 +183,9 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
             if (Imgproc.contourArea(c) < cfg.minArea) break;
             TaggedRect rect = new TaggedRect(Imgproc.minAreaRect(new MatOfPoint2f(c.toArray()))); // this copying is dumb, but it's the only way
 
+            rect.center.x += crop.x;
+            rect.center.y += crop.y;
+
             for (TaggedRect cmp : rects) {
                 if (cmp.isSimilar(rect, cfg.dmax2, cfg.rmax, cfg.amax)) {
                     rect.zone = cmp.zone;
@@ -207,7 +210,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
 
     @Override
     protected synchronized void drawOnImageStateful(Mat img, Ref state) {
-        if (state.inner.overallCrop == null) return;
+        try{if (state.inner.overallCrop == null) return;
         Imgproc.rectangle(
             img,
             state.inner.overallCrop.tl(),
@@ -217,23 +220,11 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
         );
 
         ArrayList<MatOfPoint> pts = new ArrayList<>();
-        for (TaggedRect zone : state.inner.zones) {
-            MatOfPoint points = new MatOfPoint();
-            Imgproc.boxPoints(zone, points);
-            // System.out.println(points.dump());
-            pts.add(points);
-        }
+        for (TaggedRect zone : state.inner.zones) drawRect(img, zone, new Scalar(0, 0, 0), 2);
         ArrayList<MatOfPoint> good = new ArrayList<>();
         ArrayList<MatOfPoint> bad = new ArrayList<>();
-        for (TaggedRect detect : state.inner.detections) {
-            MatOfPoint points = new MatOfPoint();
-            Imgproc.boxPoints(detect, points);
-            if (detect.zone == Integer.MAX_VALUE) bad.add(points);
-            else good.add(points);
-        }
-        Imgproc.polylines(img, pts,  true, new Scalar(0, 0, 0), 2);
-        Imgproc.polylines(img, good, true, new Scalar(0, 255, 0), 2);
-        Imgproc.polylines(img, bad,  true, new Scalar(0, 0, 255), 2);
+        for (TaggedRect detect : state.inner.detections) drawRect(img, detect, detect.zone == Integer.MAX_VALUE ? new Scalar(0, 0, 255) : new Scalar(0, 255, 0), 2);
+        } catch (Exception e) {e.printStackTrace();}
     }
 
     private static Rect mergeRects(Rect a, Rect b) {
@@ -243,5 +234,24 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
         double bry = Math.min(a.br().y, b.br().y);
 
         return new Rect(new Point(tlx, tly), new Point(brx, bry));
+    }
+
+    private static void drawRect(Mat img, RotatedRect rect, Scalar color, int thickness) {
+        MatOfPoint points = new MatOfPoint();
+        Imgproc.boxPoints(rect, points);
+        Imgproc.polylines(
+            img,
+            Arrays.asList(
+                new MatOfPoint(
+                    new Point(points.get(0, 0)[0], points.get(0, 1)[0]),
+                    new Point(points.get(1, 0)[0], points.get(1, 1)[0]),
+                    new Point(points.get(2, 0)[0], points.get(2, 1)[0]),
+                    new Point(points.get(3, 0)[0], points.get(3, 1)[0])
+                )
+            ),
+            true,
+            color,
+            thickness
+        );
     }
 }
