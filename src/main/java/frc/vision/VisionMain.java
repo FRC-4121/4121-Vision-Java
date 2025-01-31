@@ -1,3 +1,4 @@
+
 package frc.vision;
 
 import edu.wpi.first.networktables.*;
@@ -195,6 +196,7 @@ public class VisionMain {
             ProcessorLoader.registerFactory(new AprilTagProcessor.Factory());
             ProcessorLoader.registerFactory(new RectVisionProcessor.Factory());
             ProcessorLoader.registerFactory(new VideoSaver.Factory());
+            ProcessorLoader.registerFactory(new Coral2025Processor.Factory());
             ProcessorLoader.initConfig(new FileReader(new File(configDir, "process.json")));
 
             Executor exec = ForkJoinPool.commonPool();
@@ -245,7 +247,7 @@ public class VisionMain {
 
             cams.start();
 
-            System.out.println("Running successfully :3");
+            System.out.println("Running successfully :3 :D");
             
             while (true) {
                 if (visionDebug) {

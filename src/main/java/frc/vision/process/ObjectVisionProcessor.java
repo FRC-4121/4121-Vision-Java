@@ -1,7 +1,7 @@
 package frc.vision.process;
 
 import edu.wpi.first.networktables.*;
-import frc.vision.camera.CameraConfig;
+import frc.vision.camera.CameraBase;
 import java.util.Collection;
 import java.util.Map;
 import org.opencv.core.*;
@@ -21,12 +21,12 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
     }
 
     // Process the input image into a list of objects
-    protected abstract Collection<VisionObject> processObjects(Mat img, CameraConfig cfg, Map<String, VisionProcessor> deps);
+    protected abstract Collection<VisionObject> processObjects(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps);
     
     @Override
-    public void processStateful(Mat img, CameraConfig cfg, Map<String, VisionProcessor> deps, Ref state) {
+    public void processStateful(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps, Ref state) {
         state.inner = processObjects(img, cfg, deps);
-        if (calcAngles) state.inner.forEach(obj -> obj.calcAngles(cfg));
+        if (calcAngles) state.inner.forEach(obj -> obj.calcAngles(cfg.getConfig()));
     }
 
     @Override

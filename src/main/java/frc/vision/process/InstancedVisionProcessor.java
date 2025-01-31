@@ -2,7 +2,6 @@ package frc.vision.process;
 
 import edu.wpi.first.networktables.*;
 import frc.vision.camera.CameraBase;
-import frc.vision.camera.CameraConfig;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.opencv.core.Mat;
@@ -24,7 +23,7 @@ public abstract class InstancedVisionProcessor<S> extends VisionProcessor {
     }
 
     // Process an image, but given a state instead of just a handle.
-    protected abstract void processStateful(Mat img, CameraConfig cfg, Map<String, VisionProcessor> deps, Ref state);
+    protected abstract void processStateful(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps, Ref state);
 
     // Write data to a network table, but given a state instead of just a handle.
     protected abstract void toNetworkTableStateful(NetworkTable table, Ref state);
@@ -36,7 +35,7 @@ public abstract class InstancedVisionProcessor<S> extends VisionProcessor {
     public void process(Mat img, CameraBase handle, Map<String, VisionProcessor> deps) {
         Ref state = states.putIfAbsent(handle, new Ref());
         if (state == null) state = states.get(handle);
-        processStateful(img, handle.getConfig(), deps, state);
+        processStateful(img, handle, deps, state);
     }
 
     @Override

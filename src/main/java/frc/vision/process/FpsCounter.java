@@ -1,7 +1,7 @@
 package frc.vision.process;
 
 import edu.wpi.first.networktables.*;
-import frc.vision.camera.CameraConfig;
+import frc.vision.camera.CameraBase;
 import frc.vision.load.*;
 import java.time.*;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
     }
 
     @Override
-    protected void processStateful(Mat _img, CameraConfig _cfg, Map<String, VisionProcessor> _deps, Ref state) {
+    protected void processStateful(Mat _img, CameraBase _cfg, Map<String, VisionProcessor> _deps, Ref state) {
         if (state.inner == null) {
             state.inner = new State();
             state.inner.minFps = Float.POSITIVE_INFINITY;

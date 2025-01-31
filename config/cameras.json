@@ -1,8 +1,9 @@
 {
     "default": {
-        "fpsThrottle": 80,
+        "fpsThrottle_": 80,
         "width": 640,
-        "height": 480
+        "height": 480,
+        "fov": 43
     },
     "dummy": {
         "fov": 40,
@@ -10,17 +11,20 @@
         "vlibs": ["fps"]
     },
     "idx0": {
+        "fps": 30,
         "fov": 43,
         "type": "cv",
-        "fourcc": "MJPG",
-        "vlibs": ["fps"],
-        "index": 0
+        "fourcc": "YUYV",
+        "index": 0,
+        "vlibs": ["fps", "april", "coral2025"]
     },
     "idx2": {
+        "fps": 30,
         "fov": 43,
         "type": "cv",
-        "fourcc": "MJPG",
-        "index": 2
+        "fourcc": "YUYV",
+        "index": 2,
+        "vlibs": ["fps", "april", "coral2025"]
     },
     "port1": {
         "fps": 30,
@@ -36,22 +40,27 @@
         "fourcc": "YUYV",
         "port": 0
     },
-    "usb3": {
-        "fps": 30,
-        "fov": 43,
-        "type": "cv",
-        "fourcc": "YUYV",
-        "port": [0, 1]
-    },
-    "tag-cam": {
-        "width": 1280,
-        "height": 0,
-        "enforceSize": false,
-        "skipConfig": false,
-        "fov": 43,
+    "tags": {
+        "width": -1,
+        "height": -1,
         "type": "cv",
         "fourcc": "MJPG",
         "index": 0,
+        "port_": 0,
+        "vlibs": ["fps", "april"]
+    },
+    "coral": {
+        "width": 640,
+        "height": 480,
+        "type": "cv",
+        "index": 2,
+        "port_": 1,
+        "skipConfig": false,
+        "vlibs": ["fps", "coral2025"]
+    },
+    "rear": {
+        "type": "cv",
+        "index": 4,
         "vlibs": ["fps", "april"]
     }
 }

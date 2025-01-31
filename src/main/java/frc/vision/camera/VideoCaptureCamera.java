@@ -81,7 +81,7 @@ public class VideoCaptureCamera extends CameraBase {
                     e.printStackTrace(log);
                 }
             }
-            // configureCapture();
+            configureCapture();
         } else {
             log.write("Reload requested but we don't know where the camera came from\n");
         }
@@ -93,27 +93,6 @@ public class VideoCaptureCamera extends CameraBase {
             Config cfg = (Config)config;
             if (cap != null) {
                 try {
-                    if (cfg.width > 0) {
-                        log.write(String.format("Set width to %d\n", cfg.width));
-                        log.flush();
-                        cap.set(Videoio.CAP_PROP_FRAME_WIDTH, cfg.width);
-                    }
-                    if (cfg.height > 0) {
-                        System.out.println("setting height??");
-                        log.write(String.format("Set height to %d\n", cfg.height));
-                        log.flush();
-                        cap.set(Videoio.CAP_PROP_FRAME_HEIGHT, cfg.height);
-                    }
-                    if (cfg.fps > 0) {
-                        log.write(String.format("Set FPS to %.2f\n", cfg.fps));
-                        log.flush();
-                        cap.set(Videoio.CAP_PROP_FPS, cfg.fps);
-                    }
-                    if (cfg.brightness != null) {
-                        log.write(String.format("Set brightness to %d\n", cfg.brightness));
-                        log.flush();
-                        cap.set(Videoio.CAP_PROP_BRIGHTNESS, cfg.brightness);
-                    }
                     if (cfg.fourcc != null) {
                         if (cfg.fourcc.length() == 4) {
                             log.write(String.format("Set fourcc to %s\n", cfg.fourcc));
@@ -130,6 +109,26 @@ public class VideoCaptureCamera extends CameraBase {
                             log.write(String.format("Invalid fourcc \"%s\"\n", cfg.fourcc));
                             log.flush();
                         }
+                    }
+                    if (cfg.width > 0) {
+                        log.write(String.format("Set width to %d\n", cfg.width));
+                        log.flush();
+                        cap.set(Videoio.CAP_PROP_FRAME_WIDTH, cfg.width);
+                    }
+                    if (cfg.height > 0) {
+                        log.write(String.format("Set height to %d\n", cfg.height));
+                        log.flush();
+                        cap.set(Videoio.CAP_PROP_FRAME_HEIGHT, cfg.height);
+                    }
+                    if (cfg.fps > 0) {
+                        log.write(String.format("Set FPS to %.2f\n", cfg.fps));
+                        log.flush();
+                        cap.set(Videoio.CAP_PROP_FPS, cfg.fps);
+                    }
+                    if (cfg.brightness != null) {
+                        log.write(String.format("Set brightness to %d\n", cfg.brightness));
+                        log.flush();
+                        cap.set(Videoio.CAP_PROP_BRIGHTNESS, cfg.brightness);
                     }
                 } catch (Exception e) {
                     e.printStackTrace(log);
