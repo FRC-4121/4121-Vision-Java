@@ -53,13 +53,13 @@
         "amax": 1.5,
         "rmax": 0.1,
 
-        "idx": -0.75,
+        "idx": -2,
         "idy": -8.5,
         "idz": 0,
-        "iw": 2.5,
+        "iw": 4,
         "ih": 9,
 
-        "tagCam": "usb3",
+        "tagCam_": "tags",
         "recognizedTags": [2],
         "positions": [
             { "x":  0.962, "y": 1.84, "z": 1.02, "angle": 0.61 },

@@ -1,3 +1,4 @@
+
 package frc.vision;
 
 import edu.wpi.first.networktables.*;
@@ -246,7 +247,7 @@ public class VisionMain {
 
             cams.start();
 
-            System.out.println("Running successfully :3");
+            System.out.println("Running successfully :3 :D");
             
             while (true) {
                 if (visionDebug) {
