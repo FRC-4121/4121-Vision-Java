@@ -16,15 +16,7 @@
         "type": "cv",
         "fourcc": "YUYV",
         "index": 0,
-        "vlibs": ["fps", "april", "coral2025"]
-    },
-    "idx2": {
-        "fps": 30,
-        "fov": 43,
-        "type": "cv",
-        "fourcc": "YUYV",
-        "index": 2,
-        "vlibs": ["fps", "april", "coral2025"]
+        "vlibs": ["fps", "april"]
     },
     "port1": {
         "fps": 30,
@@ -36,13 +28,16 @@
     "port0": {
         "fps": 30,
         "fov": 43,
+        "width": 1280,
+        "height": 800,
         "type": "cv",
-        "fourcc": "YUYV",
-        "port": 0
+        "fourcc": "MJPG",
+        "port": 0,
+        "vlibs": ["fps", "april"]
     },
     "tags": {
-        "width": -1,
-        "height": -1,
+        "width": 1280,
+        "height": 800,
         "type": "cv",
         "fourcc": "MJPG",
         "index": 0,
@@ -60,7 +55,7 @@
     },
     "rear": {
         "type": "cv",
-        "index": 4,
+        "index": 0,
         "vlibs": ["fps", "april"]
     }
 }
