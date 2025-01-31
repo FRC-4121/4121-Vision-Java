@@ -174,16 +174,43 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
     public void toNetworkTableStateful(NetworkTable table, Ref state) {
         super.toNetworkTableStateful(table, state);
         NetworkTable table_ = table.getSubTable(name);
+        var value = table_.getValue("filter");
+        long[] filter = new long[0];
+        switch (value.getType()) {
+            case kIntegerArray: // we really just want an integer array
+                filter = value.getIntegerArray();
+                break;
+            case kDoubleArray: // but for some reason NT coerces it to double[]
+                double[] vals = value.getDoubleArray();
+                filter = new long[vals.length];
+                for (int i = 0; i < vals.length; ++i) filter[i] = (long)vals[i];
+                break;
+        }
         int size = state.inner.size();
         long[] ids = new long[size];
         int i = 0;
+        AprilTag best = null;
         for (VisionObject obj : state.inner) {
-            AprilTag obj_ = (AprilTag)obj;
-            AprilTagDetection tag = obj_.found;
+            AprilTag tag = (AprilTag)obj;
             ids[i] = tag.getId();
+            if (Arrays.stream(filter).anyMatch(f -> f == tag.getId())) {
+                if (best == null || best.distance > tag.distance) best = tag;
+            }
             ++i;
         }
         table_.putValue("ids", NetworkTableValue.makeIntegerArray(ids));
+        NetworkTable bestTable = table_.getSubTable("best");
+        if (best != null) {
+            bestTable.putValue("found", NetworkTableValue.makeBoolean(true));
+            bestTable.putValue("id", NetworkTableValue.makeInteger(best.getId()));
+            bestTable.putValue("d", NetworkTableValue.makeDouble(best.distance));
+            bestTable.putValue("a", NetworkTableValue.makeDouble(best.azimuth));
+            bestTable.putValue("e", NetworkTableValue.makeDouble(best.elevation));
+            bestTable.putValue("o", NetworkTableValue.makeDouble(best.offset));
+            bestTable.putValue("r", NetworkTableValue.makeDouble(best.rotation));
+        } else {
+            bestTable.putValue("found", NetworkTableValue.makeBoolean(false));
+        }
     }
 
     @Override
