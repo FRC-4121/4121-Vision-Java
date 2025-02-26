@@ -210,7 +210,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
 
     @Override
     protected synchronized void drawOnImageStateful(Mat img, Ref state) {
-        try{if (state.inner.overallCrop == null) return;
+        if (state.inner.overallCrop == null) return;
         Imgproc.rectangle(
             img,
             state.inner.overallCrop.tl(),
@@ -224,14 +224,13 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
         ArrayList<MatOfPoint> good = new ArrayList<>();
         ArrayList<MatOfPoint> bad = new ArrayList<>();
         for (TaggedRect detect : state.inner.detections) drawRect(img, detect, detect.zone == Integer.MAX_VALUE ? new Scalar(0, 0, 255) : new Scalar(0, 255, 0), 2);
-        } catch (Exception e) {e.printStackTrace();}
     }
 
     private static Rect mergeRects(Rect a, Rect b) {
-        double tlx = Math.min(a.tl().x, a.tl().x);
+        double tlx = Math.min(a.tl().x, b.tl().x);
         double tly = Math.min(a.tl().y, b.tl().y);
-        double brx = Math.min(a.br().x, a.br().x);
-        double bry = Math.min(a.br().y, b.br().y);
+        double brx = Math.max(a.br().x, b.br().x);
+        double bry = Math.max(a.br().y, b.br().y);
 
         return new Rect(new Point(tlx, tly), new Point(brx, bry));
     }
