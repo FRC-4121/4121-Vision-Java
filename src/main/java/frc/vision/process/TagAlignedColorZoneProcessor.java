@@ -93,12 +93,11 @@ public class TagAlignedColorZoneProcessor extends InstancedVisionProcessor<TagAl
         Config cfg = getConfig();
 
         state.inner = new State();
+        state.inner.filled = new ArrayList<>();
+        state.inner.empty = new ArrayList<>();
 
         var seen = AprilTagProcessor.seen.get(cfg.tagCam == null ? cam.getName() : cfg.tagCam);
         if (seen == null) return;
-
-        state.inner.filled = new ArrayList<>();
-        state.inner.empty = new ArrayList<>();
 
         Mat buf = new Mat();
 
@@ -109,7 +108,7 @@ public class TagAlignedColorZoneProcessor extends InstancedVisionProcessor<TagAl
                 Position p = cfg.positions.get(i);
                 double w = p.w < 0 ? cfg.w : p.w;
                 double h = p.h < 0 ? cfg.h : p.h;
-                double x = a.getX() + (p.x - p.z * sa) * a.width - w * 0.5;
+                double x = a.getX() + p.x * a.width + p.z * sa * a.height - w * 0.5;
                 double y = a.getY() + p.y * -a.height - h * 0.5;
                 if (x < 0 || y < 0 || x + w >= img.cols() || y + h >= img.rows()) continue;
 
