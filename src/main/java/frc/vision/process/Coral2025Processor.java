@@ -199,7 +199,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
 
     @Override
     protected void toNetworkTableStateful(NetworkTable table, Ref state) {
-        if (state.inner == null) return;
+        if (state.inner.overallCrop == null) return;
         long[] seen = state.inner.detections
             .stream()
             .mapToLong(d -> d.zone)
