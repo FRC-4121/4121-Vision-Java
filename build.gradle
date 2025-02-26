@@ -14,6 +14,7 @@ repositories {
 dependencies {
     implementation 'org.openpnp:opencv:4.6.0-0' // available for download up to 4.9.0 but APT only goes up to 4.6
     implementation 'edu.wpi.first.apriltag:apriltag-java:2024.3.2'
+    implementation 'edu.wpi.first.cscore:cscore-java:2024.3.2'
     implementation 'edu.wpi.first.ntcore:ntcore-java:2024.3.2'
     implementation 'edu.wpi.first.wpiutil:wpiutil-java:2024.3.2'
     implementation 'edu.wpi.first.wpinet:wpinet-java:2024.3.2'
@@ -22,6 +23,7 @@ dependencies {
 
     runtimeOnly 'edu.wpi.first.wpiunits:wpiunits-java:2024.3.2' // needed for wpimath
     runtimeOnly 'edu.wpi.first.apriltag:apriltag-jni:2024.3.2:linuxarm64' // needed for apriltag
+    runtimeOnly 'edu.wpi.first.cscore:cscore-jni:2024.3.2:linuxarm64'
     runtimeOnly 'edu.wpi.first.ntcore:ntcore-jni:2024.3.2:linuxarm64' // needed for ntcore
     runtimeOnly 'edu.wpi.first.wpiutil:wpiutil-jni:2024.3.2:linuxarm64' // needed for ntcore
     runtimeOnly 'edu.wpi.first.wpinet:wpinet-jni:2024.3.2:linuxarm64'

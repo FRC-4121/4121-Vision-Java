@@ -1,5 +1,8 @@
 package frc.vision.camera;
 
+import edu.wpi.first.cscore.CvSource;
+import edu.wpi.first.cscore.MjpegServer;
+import edu.wpi.first.util.PixelFormat;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -33,6 +36,9 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
 
     protected Instant lastFrame;
 
+    protected CvSource source;
+    protected MjpegServer sink;
+
     public static boolean echoErrors = false;
     public static File logDir = new File("logs/cam");
     public static final String logNameFormat = "log_%s_%s.txt";
@@ -55,6 +61,16 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
         File link = new File(logDir, String.format(logNameFormat, name, "LATEST"));
         link.delete();
         Files.createSymbolicLink(link.toPath(), Paths.get(filename));
+        if (cfg.stream != null) {
+            try {
+                String streamName = cfg.stream.name == null ? name : cfg.stream.name;
+                source = new CvSource(name + "-src", PixelFormat.kBGR, cfg.width, cfg.height, cfg.stream.fps);
+                sink = cfg.stream.address == null ? new MjpegServer(streamName, cfg.stream.port) : new MjpegServer(streamName, cfg.stream.address, cfg.stream.port);
+                sink.setSource(source);
+            } catch (Exception e) {
+                e.printStackTrace(log);
+            }
+        }
     }
 
     // Main customization point for the camera. Read a single frame, or null if it failed.
@@ -94,6 +110,7 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
             }
             else this.frame = frame;
             Imgproc.rectangle(frame, new Point(0, frame.rows() - config.cropBottom), new Point(frame.cols(), frame.rows()), new Scalar(0));
+            source.putFrame(frame);
             return frame;
         }
         catch (NullPointerException e) {

@@ -9,10 +9,12 @@ public class StreamConfig {
         int port = 1181;
         String address;
         String name;
+        int fps = 30;
     }
     public int port = 1181;
     public String address;
     public String name;
+    public int fps = 30;
 
     public static class Deserializer implements JsonDeserializer<StreamConfig> {
         @Override
@@ -42,6 +44,7 @@ public class StreamConfig {
             out.port = sh.port;
             out.address = sh.address;
             out.name = sh.name;
+            out.fps = sh.fps;
             return out;
         }
     }

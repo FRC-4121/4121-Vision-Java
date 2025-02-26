@@ -33,6 +33,7 @@
         "type": "cv",
         "fourcc": "MJPG",
         "port": 0,
+        "stream": 1181,
         "vlibs": ["fps", "april"]
     },
     "tags": {
