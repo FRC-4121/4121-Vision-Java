@@ -31,9 +31,9 @@
         "width": 1280,
         "height": 800,
         "type": "cv",
-        "fourcc": "MJPG",
+        "fourcc": "YUYV",
         "port": 0,
-        "vlibs": ["fps", "april"]
+        "vlibs": ["fps", "april", "coral2025"]
     },
     "tags": {
         "width": 1280,

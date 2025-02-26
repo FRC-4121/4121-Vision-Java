@@ -24,7 +24,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
         }
         public boolean isSimilar(RotatedRect other, double dmax2, double amax, double rmax) {
             double da1 = Math.abs(angle - other.angle);
-            double da2 = 2 * Math.PI - da1;
+            double da2 = 360 - da1;
             if (Math.min(da1, da2) > rmax) return false;
 
             double dx = center.x - other.center.x;
@@ -147,11 +147,11 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
                 double sa = Math.sin(a.rotation);
                 return IntStream.range(0, cfg.positions.size()).mapToObj(i -> {
                     Position p = cfg.positions.get(i);
-                    double angle = -Math.atan(Math.tan(p.angle) / sa);
+                    double angle = -Math.atan(Math.tan(p.angle) * sa);
                     double x = (p.x - p.z * sa) * a.width;
                     double y = p.y * -a.height;
                     return new TaggedRect(
-                        new RotatedRect(new Point(a.getX() + x, a.getY() + y), new Size(cfg.width * a.height / 6.5, cfg.height * a.height / 6.5), angle),
+                        new RotatedRect(new Point(a.getX() + x, a.getY() + y), new Size(cfg.width * a.height / 6.5, cfg.height * a.height / 6.5), angle * 180 / Math.PI),
                         a.getId() * cfg.positions.size() + i
                     );
                 });
