@@ -17,6 +17,8 @@ public class CameraConfig extends Typed {
     public int lockTimeout = Integer.MAX_VALUE;
     public StreamConfig stream;
     public int crosshair = 0;
+    public String bottomLeft;
+    public String bottomRight;
 
     public void updateFrom(CameraConfig other) {
         if (width < 0) width = other.width;
@@ -27,6 +29,9 @@ public class CameraConfig extends Typed {
             else vlibs.addAll(other.vlibs);
         }
         if (other.fpsThrottle < fpsThrottle) fpsThrottle = other.fpsThrottle;
+        if (crosshair == 0) crosshair = other.crosshair;
+        if (bottomLeft == null) bottomLeft = other.bottomLeft;
+        if (bottomRight == null) bottomRight = other.bottomRight;
     }
     public Mat camMat() {
         float f = 0.5f / (float)Math.tan(fov * Math.PI / 360) * width;

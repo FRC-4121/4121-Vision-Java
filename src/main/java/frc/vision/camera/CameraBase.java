@@ -109,22 +109,8 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
                 Imgproc.resize(frame, this.frame, new Size(config.width, config.height));
             }
             else this.frame = frame;
-            if (config.cropBottom > 0) Imgproc.rectangle(frame, new Point(0, frame.rows() - config.cropBottom), new Point(frame.cols(), frame.rows()), new Scalar(0));
-            Scalar crosshairColor = new Scalar(0, 255, 255);
-            if (config.crosshair > 0) {
-                int cx = frame.cols() / 2;
-                int cy = frame.rows() / 2;
-                Imgproc.line(frame, new Point(cx - config.crosshair, cy), new Point(cx + config.crosshair, cy), crosshairColor, 2);
-                Imgproc.line(frame, new Point(cx, cy - config.crosshair), new Point(cx, cy + config.crosshair), crosshairColor, 2);
-            } else if (config.crosshair < 0) {
-                int mx = frame.cols();
-                int my = frame.rows();
-                int cx = mx / 2;
-                int cy = my / 2;
-                Imgproc.line(frame, new Point(0, cy), new Point(mx, cy), crosshairColor, 2);
-                Imgproc.line(frame, new Point(cx, 0), new Point(cx, my), crosshairColor, 2);
-            }
-            source.putFrame(frame);
+            drawOnFrame(frame);
+            if (source != null) source.putFrame(frame);
             return frame;
         }
         catch (NullPointerException e) {
@@ -141,6 +127,70 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
         }
         finally {
             if (locked) cameraLock.unlock();
+        }
+    }
+
+    private void drawOnFrame(Mat frame) {
+        if (config.cropBottom > 0) Imgproc.rectangle(frame, new Point(0, frame.rows() - config.cropBottom), new Point(frame.cols(), frame.rows()), new Scalar(0));
+        Scalar color = new Scalar(0, 255, 255);
+        if (config.crosshair > 0) {
+            int cx = frame.cols() / 2;
+            int cy = frame.rows() / 2;
+            Imgproc.line(frame, new Point(cx - config.crosshair, cy), new Point(cx + config.crosshair, cy), color, 2);
+            Imgproc.line(frame, new Point(cx, cy - config.crosshair), new Point(cx, cy + config.crosshair), color, 2);
+        } else if (config.crosshair < 0) {
+            int mx = frame.cols();
+            int my = frame.rows();
+            int cx = mx / 2;
+            int cy = my / 2;
+            Imgproc.line(frame, new Point(0, cy), new Point(mx, cy), color, 2);
+            Imgproc.line(frame, new Point(cx, 0), new Point(cx, my), color, 2);
+            if (config.crosshair < -1) {
+                int cx1 = cx / 2;
+                int cx2 = cx + cx1;
+                int cy1 = cy / 2;
+                int cy2 = cy + cy1;
+                Imgproc.line(frame, new Point(cx - 10, cy1), new Point(cx + 10, cy1), color, 1);
+                Imgproc.line(frame, new Point(cx - 10, cy2), new Point(cx + 10, cy2), color, 1);
+                Imgproc.line(frame, new Point(cx1, cy - 10), new Point(cx1, cy + 10), color, 1);
+                Imgproc.line(frame, new Point(cx2, cy - 10), new Point(cx2, cy + 10), color, 1);
+            }
+        }
+        if (config.bottomLeft != null) {
+            Size sz = Imgproc.getTextSize(
+                config.bottomLeft,
+                Imgproc.FONT_HERSHEY_PLAIN,
+                1,
+                2,
+                null
+            );
+            Imgproc.putText(
+                frame,
+                config.bottomLeft,
+                new Point(5, frame.rows() - sz.height),
+                Imgproc.FONT_HERSHEY_PLAIN,
+                1,
+                color,
+                2
+            );
+        }
+        if (config.bottomRight != null) {
+            Size sz = Imgproc.getTextSize(
+                config.bottomRight,
+                Imgproc.FONT_HERSHEY_PLAIN,
+                1,
+                2,
+                null
+            );
+            Imgproc.putText(
+                frame,
+                config.bottomRight,
+                new Point(frame.cols() - sz.width - 5, frame.rows() - sz.height),
+                Imgproc.FONT_HERSHEY_PLAIN,
+                1,
+                color,
+                2
+            );
         }
     }
 
