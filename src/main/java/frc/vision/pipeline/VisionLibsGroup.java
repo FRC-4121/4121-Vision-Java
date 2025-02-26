@@ -20,7 +20,7 @@ import org.opencv.core.Mat;
 // Vision library group to handle dispatch from a frame to running vision processors.
 // Should be mostly non-blocking.
 public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
-    public static final int MAX_QUEUE = 4;
+    public static final int MAX_QUEUE = 1;
     public static final int MAX_PROCS = 1; // I want real framerate
     protected class CamState {
         ConcurrentHashMap<CompletableFuture<Void>, Integer> handles;

@@ -220,6 +220,7 @@ public class VisionMain {
             ProcessorLoader.registerFactory(new RectVisionProcessor.Factory());
             ProcessorLoader.registerFactory(new VideoSaver.Factory());
             ProcessorLoader.registerFactory(new Coral2025Processor.Factory());
+            ProcessorLoader.registerFactory(new TagAlignedColorZoneProcessor.Factory());
             ProcessorLoader.initConfig(new FileReader(new File(configDir, "process.json")));
 
             Executor exec = ForkJoinPool.commonPool();

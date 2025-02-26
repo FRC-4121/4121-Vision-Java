@@ -16,7 +16,7 @@
         "type": "cv",
         "fourcc": "YUYV",
         "index": 0,
-        "vlibs": ["fps", "april"]
+        "vlibs": ["fps"]
     },
     "port1": {
         "fps": 30,
@@ -31,25 +31,27 @@
         "width": 1280,
         "height": 800,
         "type": "cv",
-        "fourcc": "MJPG",
+        "fourcc": "YUYV",
         "port": 0,
-        "vlibs": ["fps", "april"]
+        "vlibs": ["fps", "april", "coral2025"]
     },
     "tags": {
-        "width": 1280,
-        "height": 800,
+        "width": 640,
+        "height": 480,
         "type": "cv",
-        "fourcc": "MJPG",
-        "index": 0,
-        "port_": 0,
+        "fourcc": "YUYV",
+        "index_": 0,
+        "port": 0,
+        "fps": 30,
         "vlibs": ["fps", "april"]
     },
     "coral": {
         "width": 640,
         "height": 480,
         "type": "cv",
-        "index": 2,
-        "port_": 1,
+        "index_": 2,
+        "port": 1,
+        "fps": 30,
         "skipConfig": false,
         "vlibs": ["fps", "coral2025"]
     },
