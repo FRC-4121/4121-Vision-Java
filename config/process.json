@@ -47,7 +47,7 @@
         "vmin": 45,
         "vmax": 161,
 
-        "tagCam_": "tags",
+        "tagCam": "tags",
         "recognizedTags": [7, 8, 9],
         "positions": [
             { "x":  0.962, "y": 1.84, "z": 0.51 },
