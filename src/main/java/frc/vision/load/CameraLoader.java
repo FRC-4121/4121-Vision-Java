@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import frc.vision.camera.CameraBase;
 import frc.vision.camera.CameraConfig;
+import frc.vision.camera.StreamConfig;
 import java.lang.reflect.Type;
 import java.io.IOException;
 import java.io.FileReader;
@@ -49,7 +50,7 @@ public class CameraLoader {
             System.err.println("Calling CameraLoader.initConfig() when already initialized does nothing");
             return;
         }
-        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(WrappedConfig.class, new CustomDeserializer());
+        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(WrappedConfig.class, new CustomDeserializer()).registerTypeAdapter(StreamConfig.class, new StreamConfig.Deserializer());
         for (CameraFactory fac : types.values()) {
             fac.modifyBuilder(builder);
         }
