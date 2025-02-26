@@ -109,7 +109,21 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
                 Imgproc.resize(frame, this.frame, new Size(config.width, config.height));
             }
             else this.frame = frame;
-            Imgproc.rectangle(frame, new Point(0, frame.rows() - config.cropBottom), new Point(frame.cols(), frame.rows()), new Scalar(0));
+            if (config.cropBottom > 0) Imgproc.rectangle(frame, new Point(0, frame.rows() - config.cropBottom), new Point(frame.cols(), frame.rows()), new Scalar(0));
+            Scalar crosshairColor = new Scalar(0, 255, 255);
+            if (config.crosshair > 0) {
+                int cx = frame.cols() / 2;
+                int cy = frame.rows() / 2;
+                Imgproc.line(frame, new Point(cx - config.crosshair, cy), new Point(cx + config.crosshair, cy), crosshairColor, 2);
+                Imgproc.line(frame, new Point(cx, cy - config.crosshair), new Point(cx, cy + config.crosshair), crosshairColor, 2);
+            } else if (config.crosshair < 0) {
+                int mx = frame.cols();
+                int my = frame.rows();
+                int cx = mx / 2;
+                int cy = my / 2;
+                Imgproc.line(frame, new Point(0, cy), new Point(mx, cy), crosshairColor, 2);
+                Imgproc.line(frame, new Point(cx, 0), new Point(cx, my), crosshairColor, 2);
+            }
             source.putFrame(frame);
             return frame;
         }

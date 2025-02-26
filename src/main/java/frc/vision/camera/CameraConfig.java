@@ -16,6 +16,7 @@ public class CameraConfig extends Typed {
     public int fpsThrottle = Integer.MAX_VALUE;
     public int lockTimeout = Integer.MAX_VALUE;
     public StreamConfig stream;
+    public int crosshair = 0;
 
     public void updateFrom(CameraConfig other) {
         if (width < 0) width = other.width;
