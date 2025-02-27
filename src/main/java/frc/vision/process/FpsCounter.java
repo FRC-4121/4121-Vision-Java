@@ -11,10 +11,10 @@ import org.opencv.imgproc.Imgproc;
 public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
     static class State {
         Instant last;
-        float lastFps;
-        float minFps;
-        float maxFps;
-        float avgFps;
+        double lastFps;
+        double minFps;
+        double maxFps;
+        double avgFps;
         int numFrames;
     }
     public FpsCounter() {
@@ -35,7 +35,7 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
         State s = state.inner;
         if (s.last != null) {
             Duration diff = Duration.between(s.last, inst);
-            float lastFps = 1000000000 / (float)diff.toNanos();
+            double lastFps = 1000000000 / (double)diff.toNanos();
             s.lastFps = lastFps;
             if (lastFps < s.minFps) {
                 s.minFps = lastFps;
@@ -56,10 +56,10 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
         if (state.inner == null) return;
         State s = state.inner;
 
-        table.putValue("fps", NetworkTableValue.makeFloat(s.lastFps));
-        table.putValue("minFps", NetworkTableValue.makeFloat(s.minFps));
-        table.putValue("maxFps", NetworkTableValue.makeFloat(s.maxFps));
-        table.putValue("avgFps", NetworkTableValue.makeFloat(s.avgFps));
+        table.putValue("fps", NetworkTableValue.makeDouble(s.lastFps));
+        table.putValue("minFps", NetworkTableValue.makeDouble(s.minFps));
+        table.putValue("maxFps", NetworkTableValue.makeDouble(s.maxFps));
+        table.putValue("avgFps", NetworkTableValue.makeDouble(s.avgFps));
     }
 
     @Override
