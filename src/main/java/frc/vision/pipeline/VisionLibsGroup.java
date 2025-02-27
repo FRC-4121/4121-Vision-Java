@@ -229,7 +229,9 @@ public class VisionLibsGroup implements BiConsumer<Mat, CameraBase> {
         cleanup.cam = cam;
         cleanup.state = state;
         CompletableFuture fut = future
-            .thenRunAsync(() -> postProcess.accept(frame, cam), exec)
+            .thenRunAsync(() -> {
+                if (postProcess != null) postProcess.accept(frame, cam);
+            }, exec)
             .exceptionally(e -> {
                 e.printStackTrace(cam.getLog());
                 return null;
