@@ -36,10 +36,10 @@
         "vlibs": ["fps", "april", "coral2025"]
     },
     "tags": {
-        "width": 640,
-        "height": 480,
+        "width": 1280,
+        "height": 800,
         "type": "cv",
-        "fourcc": "YUYV",
+        "fourcc": "MJPG",
         "index_": 0,
         "port": 0,
         "fps": 30,
@@ -58,6 +58,7 @@
     "rear": {
         "type": "cv",
         "index": 0,
+        "offsetX": 0,
         "vlibs": ["fps", "april"]
     },
     "front-stream": {
