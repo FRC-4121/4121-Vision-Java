@@ -53,9 +53,9 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
             if (pose == null) super.calcAngles(cfg);
             else {
                 Translation3d trans = pose.getTranslation();
-                double x = trans.getX();
-                double y = trans.getY();
-                double z = trans.getZ();
+                double x = trans.getX() + cfg.offsetX;
+                double y = trans.getY() + cfg.offsetY;
+                double z = trans.getZ() + cfg.offsetZ;
                 azimuth = Math.atan2(x, z);
                 elevation = -Math.atan2(y, z);
                 distance = Math.sqrt(x * x + y * y + z * z);

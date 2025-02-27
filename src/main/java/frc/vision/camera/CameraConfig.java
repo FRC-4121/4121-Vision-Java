@@ -19,11 +19,15 @@ public class CameraConfig extends Typed {
     public int crosshair = 0;
     public String bottomLeft;
     public String bottomRight;
+    public float offsetX;
+    public float offsetY;
+    public float offsetZ;
 
     public void updateFrom(CameraConfig other) {
         if (width < 0) width = other.width;
         if (height < 0) height = other.height;
         if (fov < 0) fov = other.fov;
+        if (offsetX < 0)
         if (other.vlibs != null) {
             if (vlibs == null) vlibs = other.vlibs;
             else vlibs.addAll(other.vlibs);
@@ -39,7 +43,7 @@ public class CameraConfig extends Typed {
             f, 0, width / 2,
             0, f, height / 2,
             0, 0, 1
-        ).reshape(1, 3);
+        ).reshape(1, 3); //Matt is meany face :P
     }
     public AprilTagPoseEstimator.Config poseConfig() {
         float f = 0.5f / (float)Math.tan(fov * Math.PI / 360) * width;
