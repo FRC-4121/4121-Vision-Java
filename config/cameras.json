@@ -43,6 +43,7 @@
         "index_": 0,
         "port": 0,
         "fps": 30,
+        "fov": 70,
         "vlibs": ["fps", "april"]
     },
     "coral": {
