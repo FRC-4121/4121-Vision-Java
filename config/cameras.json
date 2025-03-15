@@ -56,20 +56,25 @@
         "skipConfig": false,
         "vlibs": ["fps", "coral2025"]
     },
-    "rear": {
+    "front": {
         "type": "cv",
-        "index": 0,
-        "offsetX": 0,
-        "vlibs": ["fps", "april"]
-    },
-    "front-stream": {
-        "type": "cv",
-        "port": 0,
-        "width": 640,
-        "height": 480,
+        "port": 1,
+        "width": 320,
+        "height": 240,
         "stream": 1181,
         "crosshair": -2,
-        "bottomLeft": "JORMUNGANDR",
+        "bottomLeft": "JORMUNGANDR/FRONT",
+        "bottomRight": "4121",
+        "vlibs": ["fps"]
+    },
+    "rear": {
+        "type": "cv",
+        "port": 0,
+        "width": 320,
+        "height": 240,
+        "stream": 1182,
+        "crosshair": -2,
+        "bottomLeft": "JORMUNGANDR/REAR",
         "bottomRight": "4121",
         "vlibs": ["fps"]
     }
