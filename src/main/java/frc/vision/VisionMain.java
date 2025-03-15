@@ -258,6 +258,7 @@ public class VisionMain {
 
             CameraGroup cams = CameraGroup.of(camNames);
             cams.setCallback(procs);
+            cams.publishStreams(nt);
             cams_.inner = cams;
 
             {

@@ -2,6 +2,7 @@ package frc.vision.pipeline;
 
 import frc.vision.camera.*;
 import frc.vision.load.CameraLoader;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.function.BiConsumer;
@@ -22,6 +23,13 @@ public class CameraGroup {
             cam.getCamera().postInit();
         }
         finished = true;
+    }
+
+    // Make camera streams visible on network tables.
+    public void publishStreams(NetworkTableInstance nt) {
+        for (AsyncCameraThread cam : cams) {
+            cam.getCamera().publishStream(nt);
+        }
     }
 
     // Load a camera with a given name and add it.

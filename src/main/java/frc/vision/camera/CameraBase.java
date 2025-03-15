@@ -2,10 +2,12 @@ package frc.vision.camera;
 
 import edu.wpi.first.cscore.CvSource;
 import edu.wpi.first.cscore.MjpegServer;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.util.PixelFormat;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -234,5 +236,31 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void publishStream(NetworkTableInstance nt) {
+        var cfg = getConfig().stream;
+        if (cfg == null) return;
+        
+        String address = cfg.address;
+        if (address == null) {
+            try {
+                address = InetAddress.getLocalHost().getHostName();
+                System.out.println("Determined an IP of " + address);
+            } catch (Exception e) {
+                e.printStackTrace();
+                e.printStackTrace(getLog());
+                getLog().flush();
+            }
+        }
+        String streamUrl = address + ":" + cfg.port + "/video/stream.mjpg";
+
+        NetworkTable table = nt.getTable("CamearPublisher/" + (cfg.name == null ? getName() : cfg.name));
+        table.putValue("source", NetworkTableValue.makeString("vision4121"));
+        table.putValue("description", NetworkTableValue.makeString("vision camera " + getName()));
+        table.putValue("connected", NetworkTableValue.makeBoolean(true));
+        table.putValue("mode", NetworkTableValue.makeString("BGR"));
+        table.putValue("modes", NetworkTableValue.makeStringArray(new String[] { "BGR" }));
+        table.putValue("streams", NetworkTableValue.makeStringArray(new String[] { streamUrl }));
     }
 }
