@@ -23,5 +23,7 @@ sudo chmod 777 /mnt/data/4121-Vision/logs/run /mnt/data/4121-Vision/logs/run
 sudo systemctl daemon-reload
 sudo systemctl enable 4121-vision
 
+sudo apt install -y libopencv406-jni
+
 mkdir build 2> /dev/null
 ./gradlew compileJava setupRunScript
