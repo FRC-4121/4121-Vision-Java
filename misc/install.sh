@@ -17,7 +17,9 @@ sudo unlink /etc/rc5.d/K024121-vision 2> /dev/null
 # Create the new system
 sudo cp misc/4121-vision.service /etc/systemd/system/
 sudo mkdir -p /mnt/data/4121-Vision/logs/run /mnt/data/4121-Vision/logs/cam
+sudo mkdir -p /mnt/data/4121-Vision/logs/run /mnt/data/4121-Vision/logs/run
 sudo chmod 777 /mnt/data/4121-Vision/logs/run /mnt/data/4121-Vision/logs/cam
+sudo chmod 777 /mnt/data/4121-Vision/logs/run /mnt/data/4121-Vision/logs/run
 sudo systemctl daemon-reload
 sudo systemctl enable 4121-vision
 
