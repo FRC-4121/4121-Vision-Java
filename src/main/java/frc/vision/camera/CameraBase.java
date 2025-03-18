@@ -7,6 +7,7 @@ import edu.wpi.first.util.PixelFormat;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -158,12 +159,14 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
                 Imgproc.line(frame, new Point(cx2, cy - 10), new Point(cx2, cy + 10), color, 1);
             }
         }
+        double fontSize = frame.rows() / 480.0;
+        int thickness = frame.rows() / 240;
         if (config.bottomLeft != null) {
             Size sz = Imgproc.getTextSize(
                 config.bottomLeft,
                 Imgproc.FONT_HERSHEY_PLAIN,
-                1,
-                2,
+                fontSize,
+                thickness,
                 null
             );
             Imgproc.putText(
@@ -171,17 +174,17 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
                 config.bottomLeft,
                 new Point(5, frame.rows() - sz.height),
                 Imgproc.FONT_HERSHEY_PLAIN,
-                1,
+                fontSize,
                 color,
-                2
+                thickness
             );
         }
         if (config.bottomRight != null) {
             Size sz = Imgproc.getTextSize(
                 config.bottomRight,
                 Imgproc.FONT_HERSHEY_PLAIN,
-                1,
-                2,
+                fontSize,
+                thickness,
                 null
             );
             Imgproc.putText(
@@ -189,9 +192,9 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
                 config.bottomRight,
                 new Point(frame.cols() - sz.width - 5, frame.rows() - sz.height),
                 Imgproc.FONT_HERSHEY_PLAIN,
-                1,
+                fontSize,
                 color,
-                2
+                thickness
             );
         }
     }
@@ -244,19 +247,20 @@ public abstract class CameraBase implements Runnable, Callable<Mat>, Supplier<Ma
         
         String address = cfg.address;
         if (address == null) {
-            try {
-                address = InetAddress.getLocalHost().getHostName();
-                System.out.println("Determined an IP of " + address);
+            try (final DatagramSocket socket = new DatagramSocket()) {
+                socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
+                address = socket.getLocalAddress().getHostAddress();
             } catch (Exception e) {
                 e.printStackTrace();
                 e.printStackTrace(getLog());
                 getLog().flush();
             }
         }
-        String streamUrl = address + ":" + cfg.port + "/video/stream.mjpg";
+        if (address == null) return;
+        String streamUrl = "mjpg:http://" + address + ":" + cfg.port + "?action=stream";
 
-        NetworkTable table = nt.getTable("CamearPublisher/" + (cfg.name == null ? getName() : cfg.name));
-        table.putValue("source", NetworkTableValue.makeString("vision4121"));
+        NetworkTable table = nt.getTable("CameraPublisher/" + (cfg.name == null ? getName() : cfg.name));
+        table.putValue("source", NetworkTableValue.makeString("vision4121:" + getName()));
         table.putValue("description", NetworkTableValue.makeString("vision camera " + getName()));
         table.putValue("connected", NetworkTableValue.makeBoolean(true));
         table.putValue("mode", NetworkTableValue.makeString("BGR"));

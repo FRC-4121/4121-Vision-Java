@@ -276,6 +276,7 @@ public class VisionMain {
             System.out.println("Running successfully :3 :D");
 
             while (true) {
+            	cams.publishStreams(nt);
                 if (visionDebug) {
                     imgs.run();
                     if (imgs.canWaitKey()) {

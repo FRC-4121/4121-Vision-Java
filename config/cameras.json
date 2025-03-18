@@ -58,6 +58,7 @@
     },
     "front": {
         "type": "cv",
+	"fourcc": "YUYV",
         "port": 1,
         "width": 320,
         "height": 240,
@@ -69,7 +70,8 @@
     },
     "rear": {
         "type": "cv",
-        "port": 0,
+	"fourcc": "YUYV",
+        "port": 2,
         "width": 320,
         "height": 240,
         "stream": 1182,

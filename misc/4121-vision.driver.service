@@ -1,0 +1,13 @@
+[Unit]
+Description=4121 Drivercam
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bash /home/team4121/4121-Vision-Java/build/run.sh front rear -ea 10.41.21.2 -c /home/team4121/4121-Vision-Java/config/ -l /mnt/data/4121-Vision/logs/
+Environment=NATIVECACHE=/home/team4121/.wpilib/nativecache JDK_JAVA_OPTIONS=-Xmx2048M NT_IDENTITY=driver
+Restart=on-failure
+User=team4121
+
+[Install]
+WantedBy=default.target
