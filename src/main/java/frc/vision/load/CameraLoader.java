@@ -2,6 +2,7 @@ package frc.vision.load;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import edu.wpi.first.math.geometry.Transform3d;
 import frc.vision.camera.CameraBase;
 import frc.vision.camera.CameraConfig;
 import frc.vision.camera.StreamConfig;
@@ -50,7 +51,10 @@ public class CameraLoader {
             System.err.println("Calling CameraLoader.initConfig() when already initialized does nothing");
             return;
         }
-        GsonBuilder builder = new GsonBuilder().registerTypeAdapter(WrappedConfig.class, new CustomDeserializer()).registerTypeAdapter(StreamConfig.class, new StreamConfig.Deserializer());
+        GsonBuilder builder = new GsonBuilder()
+            .registerTypeAdapter(WrappedConfig.class, new CustomDeserializer())
+            .registerTypeAdapter(StreamConfig.class, new StreamConfig.Deserializer())
+            .registerTypeAdapter(Transform3d.class, new Deserializers.TransformDeserializer());
         for (CameraFactory fac : types.values()) {
             fac.modifyBuilder(builder);
         }

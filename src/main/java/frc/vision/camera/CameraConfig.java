@@ -1,6 +1,7 @@
 package frc.vision.camera;
 
 import edu.wpi.first.apriltag.AprilTagPoseEstimator;
+import edu.wpi.first.math.geometry.Transform3d;
 import frc.vision.load.Typed;
 import java.util.ArrayList;
 import org.opencv.core.*;
@@ -19,15 +20,12 @@ public class CameraConfig extends Typed {
     public int crosshair = 0;
     public String bottomLeft;
     public String bottomRight;
-    public float offsetX;
-    public float offsetY;
-    public float offsetZ;
+    public Transform3d transform = new Transform3d();
 
     public void updateFrom(CameraConfig other) {
         if (width < 0) width = other.width;
         if (height < 0) height = other.height;
         if (fov < 0) fov = other.fov;
-        if (offsetX < 0)
         if (other.vlibs != null) {
             if (vlibs == null) vlibs = other.vlibs;
             else vlibs.addAll(other.vlibs);

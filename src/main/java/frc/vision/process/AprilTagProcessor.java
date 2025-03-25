@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -53,9 +54,9 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
             if (pose == null) super.calcAngles(cfg);
             else {
                 Translation3d trans = pose.getTranslation();
-                double x = trans.getX() + cfg.offsetX;
-                double y = trans.getY() + cfg.offsetY;
-                double z = trans.getZ() + cfg.offsetZ;
+                double x = trans.getX();
+                double y = trans.getY();
+                double z = trans.getZ();
                 azimuth = Math.atan2(x, z);
                 elevation = -Math.atan2(y, z);
                 distance = Math.sqrt(x * x + y * y + z * z);
@@ -78,7 +79,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         }
     }
 
-    public static ConcurrentHashMap<String, Collection<AprilTag>> seen = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<String, Collection<AprilTag>> seen = new ConcurrentHashMap<>();
 
     public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, Scalar tagColor, AprilTagDetector detector) {
         super(name, cfg, rectColor);
@@ -164,7 +165,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         // unlike the detector, the estimator seems to just be a wrapper around the config
         AprilTagPoseEstimator estimator = new AprilTagPoseEstimator(cam.getConfig().poseConfig());
         Collection<AprilTag> tagCollection = Arrays.stream(tags)
-            .map(obj -> new AprilTag(obj, estimator.estimate(obj)))
+            .map(obj -> new AprilTag(obj, cam.getConfig().transform.plus(estimator.estimate(obj))))
             .collect(Collectors.toList());
         seen.put(cam.getName(), tagCollection);
         return tagCollection.stream().collect(Collectors.toList());
@@ -243,6 +244,35 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
                 2
             );
         }
+    }
+
+    /**
+     * Quickly average a set of transforms.
+     *
+     * The rotations are an element-wise average of the quaternions, which will lead to a significant error if they vary.
+     * Returns null for an empty input.
+     */
+    public static Transform3d fastAverageTransform(Iterable<Transform3d> trans, ToDoubleFunction<Transform3d> weight) {
+        Quaternion first = null;
+        Quaternion avgRot = null;
+        Translation3d avgTrans = null;
+        double totalWeight = 0;
+        for (var tr : trans) {
+            double w = weight.applyAsDouble(tr);
+            var vec = tr.getTranslation().times(w);
+            var quat = tr.getRotation().getQuaternion().times(w);
+            if (first == null) {
+                first = quat;
+                avgRot = quat;
+                avgTrans = vec.times(w);
+            } else {
+                if (first.dot(quat) < 0) quat = quat.times(-1);
+                avgRot = avgRot.plus(quat);
+                avgTrans = vec.times(w);
+            }
+            totalWeight += w;
+        }
+        return totalWeight != 0 ? new Transform3d(avgTrans.div(totalWeight), new Rotation3d(avgRot.divide(totalWeight))) : null;
     }
 
     public static class Config extends ProcessorConfig {
