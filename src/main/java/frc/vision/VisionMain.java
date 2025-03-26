@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeSet;
@@ -25,6 +26,7 @@ public class VisionMain {
         LOG_DIR,
         CFG_DIR,
         ADDRESS,
+        FIELD_FILE,
         NAME,
     };
 
@@ -36,6 +38,7 @@ public class VisionMain {
 
     public static void main(String[] args) throws Exception {
         Map<String, String> env = System.getenv();
+        ArrayList<String> tagsToLoad = new ArrayList<>();
         boolean visionDebug = false;
         boolean echoErrors = false;
         boolean saveVideo = false;
@@ -64,6 +67,8 @@ public class VisionMain {
                                 state = CliState.CFG_DIR;
                             } else if (longFlag.equals("address") || longFlag.equals("server-address")) {
                                 state = CliState.ADDRESS;
+                            } else if (longFlag.equals("field-file")) {
+                                state = CliState.FIELD_FILE;
                             } else if (longFlag.equals("name")) {
                                 state = CliState.NAME;
                             } else if (longFlag.equals("echo-errors")) {
@@ -111,6 +116,13 @@ public class VisionMain {
                                         }
                                         state = CliState.NAME;
                                         break;
+                                    case 'f':
+                                        if (state != CliState.NORMAL) {
+                                            System.err.println("f flag expects the next argument to be a tag file, but another flag already is expecting something");
+                                            System.exit(1);
+                                        }
+                                        state = CliState.FIELD_FILE;
+                                        break;
                                     case 'e':
                                         echoErrors = true;
                                         break;
@@ -143,6 +155,10 @@ public class VisionMain {
                     name = arg;
                     state = CliState.NORMAL;
                     break;
+                case FIELD_FILE:
+                    tagsToLoad.add(arg);
+                    state = CliState.NORMAL;
+                    break;
             }
         }
 
@@ -159,6 +175,9 @@ public class VisionMain {
                 System.exit(1);
             case NAME:
                 System.err.println("Expected the name to be used but no more arguments were passed");
+                System.exit(1);
+            case FIELD_FILE:
+                System.err.println("Expected a file to load the field layout from but no more arguments were passed");
                 System.exit(1);
         }
 
@@ -210,6 +229,46 @@ public class VisionMain {
             File link = new File(runLogs, String.format(CameraBase.logNameFormat, camNamesStr, "LATEST"));
             link.delete();
             Files.createSymbolicLink(link.toPath(), Paths.get(filename));
+
+            for (String arg : tagsToLoad) {
+                int idx = arg.indexOf("@");
+                String fieldName;
+                String path;
+                if (idx < 0) {
+                    path = arg;
+                    int idx2 = arg.lastIndexOf(".json");
+                    if (idx2 < 0 || idx2 != arg.length() - 5) {
+                        fieldName = arg;
+                    } else {
+                        int idx3 = arg.lastIndexOf(File.pathSeparator, idx2);
+                        fieldName = arg.substring(idx3 < 0 ? 0 : idx3, idx2);
+                    }
+                } else {
+                    fieldName = arg.substring(0, idx);
+                    path = arg.substring(idx + 1);
+                }
+                AprilTagFieldLayout.load(fieldName, new FileReader(path));
+            }
+            {
+                File fieldsDir = new File(configDir, "fields");
+                if (fieldsDir.exists()) {
+                    for (File f : fieldsDir.listFiles()) {
+                        String fileName = f.getName();
+                        int idx = fileName.lastIndexOf(".json");
+                        if (idx < 0 || idx != fileName.length() - 5) continue;
+                        AprilTagFieldLayout.load(fileName.substring(0, idx), new FileReader(f));
+                    }
+                }
+            }
+
+            {
+                String names = AprilTagFieldLayout.fields
+                    .keySet()
+                    .stream()
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("<none>");
+                log.write(String.format("Loaded field layouts: %s\n", names));
+            }
 
             CameraLoader.registerFactory(new FrameCamera.Factory());
             CameraLoader.registerFactory(new VideoCaptureCamera.Factory());
