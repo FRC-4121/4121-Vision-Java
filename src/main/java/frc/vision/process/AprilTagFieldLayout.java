@@ -36,6 +36,11 @@ public class AprilTagFieldLayout {
         if (name != null) fields.put(name, field);
         return field;
     }
+    public static AprilTagFieldLayout get(String name) {
+        var ret = fields.get(name);
+        if (ret == null) System.err.println(String.format("Attepmted to load missing layout \"%s\"", name));
+        return ret;
+    }
 
     public static class Deserializer implements JsonDeserializer<AprilTagFieldLayout> {
         @Override

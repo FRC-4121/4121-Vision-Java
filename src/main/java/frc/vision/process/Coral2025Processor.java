@@ -101,7 +101,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
     }
 
     @Override
-    protected synchronized void processStateful(Mat img, CameraBase cam, Map<String, VisionProcessor> deps, Ref state) {
+    protected synchronized void processStateful(Mat img, CameraBase cam, Map<String, VisionProcessor> deps, Ref<State> state) {
         Config cfg = getConfig();
 
         state.inner = new State();
@@ -198,7 +198,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
     }
 
     @Override
-    protected void toNetworkTableStateful(NetworkTable table, Ref state) {
+    protected void toNetworkTableStateful(NetworkTable table, Ref<State> state) {
         if (state.inner.overallCrop == null) return;
         long[] seen = state.inner.detections
             .stream()
@@ -209,7 +209,7 @@ public class Coral2025Processor extends InstancedVisionProcessor<Coral2025Proces
     }
 
     @Override
-    protected synchronized void drawOnImageStateful(Mat img, Ref state) {
+    protected synchronized void drawOnImageStateful(Mat img, Ref<State> state) {
         if (state.inner.overallCrop == null) return;
         Imgproc.rectangle(
             img,

@@ -25,7 +25,7 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
     }
 
     @Override
-    protected void processStateful(Mat _img, CameraBase _cfg, Map<String, VisionProcessor> _deps, Ref state) {
+    protected void processStateful(Mat _img, CameraBase _cfg, Map<String, VisionProcessor> _deps, Ref<State> state) {
         if (state.inner == null) {
             state.inner = new State();
             state.inner.minFps = Float.POSITIVE_INFINITY;
@@ -52,7 +52,7 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
     }
 
     @Override
-    protected void toNetworkTableStateful(NetworkTable table, Ref state) {
+    protected void toNetworkTableStateful(NetworkTable table, Ref<State> state) {
         if (state.inner == null) return;
         State s = state.inner;
 
@@ -63,7 +63,7 @@ public class FpsCounter extends InstancedVisionProcessor<FpsCounter.State> {
     }
 
     @Override
-    protected void drawOnImageStateful(Mat img, Ref state) {
+    protected void drawOnImageStateful(Mat img, Ref<State> state) {
         if (state.inner == null) return;
         State s = state.inner;
         String text = String.format("%5.1f/%5.1f/%5.1f/%5.1f", s.lastFps, s.minFps, s.maxFps, s.avgFps);

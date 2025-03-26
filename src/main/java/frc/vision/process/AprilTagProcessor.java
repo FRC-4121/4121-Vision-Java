@@ -16,9 +16,29 @@ import java.util.stream.Collectors;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
-public class AprilTagProcessor extends ObjectVisionProcessor {
+public class AprilTagProcessor extends ObjectVisionProcessor<AprilTagProcessor.State> {
+    protected static class State {
+        Pose3d pose;
+        double confidence;
+    }
+
     protected AprilTagDetector detector;
     protected Scalar tagColor;
+    protected AprilTagFieldLayout field;
+    protected Confidence confidence = Confidence.distRecip();
+
+    @FunctionalInterface
+    public interface Confidence {
+        double weight(Transform3d transform);
+        default void reset() {}
+
+        static Confidence distRecip() {
+            return transform -> {
+                double len = transform.getTranslation().toVector().norm();
+                return len == 0 ? 0 : 1 / len;
+            };
+        }
+    }
 
     public class AprilTag extends VisionObject {
         public AprilTagDetection found;
@@ -81,56 +101,28 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
 
     public static final ConcurrentHashMap<String, Collection<AprilTag>> seen = new ConcurrentHashMap<>();
 
-    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, Scalar tagColor, AprilTagDetector detector) {
+    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, Scalar tagColor, AprilTagDetector detector, AprilTagFieldLayout field) {
         super(name, cfg, rectColor);
         this.tagColor = tagColor;
         this.detector = detector;
+        this.field = field;
+        this.calcAngles = true;
+    }
+    
+    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, Scalar tagColor, AprilTagFieldLayout field) {
+        super(name, cfg, rectColor);
+        this.tagColor = tagColor;
+        this.detector = new AprilTagDetector();
+        this.field = field;
         this.calcAngles = true;
     }
 
-    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, Scalar tagColor, String family) {
-        this(name, cfg, rectColor, tagColor);
-        detector.addFamily(family);
+    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, Scalar tagColor, String family, AprilTagFieldLayout field) {
+        this(name, cfg, rectColor, tagColor, field);
     }
 
-    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, Scalar tagColor) {
-        this(name, cfg, rectColor, tagColor, new AprilTagDetector());
-    }
-
-    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor, String family) {
-        this(
-            name,
-            cfg,
-            rectColor,
-            new Scalar(
-                255 - rectColor.val[0],
-                255 - rectColor.val[1],
-                255 - rectColor.val[2]
-            ),
-            family
-        );
-    }
-
-    public AprilTagProcessor(String name, ProcessorConfig cfg, Scalar rectColor) {
-        this(
-            name,
-            cfg,
-            rectColor,
-            new Scalar(
-                255 - rectColor.val[0],
-                255 - rectColor.val[1],
-                255 - rectColor.val[2]
-            ),
-            defaultDetector()
-        );
-    }
-
-    public AprilTagProcessor(String name, ProcessorConfig cfg, String family) {
-        this(name, cfg, new Scalar(0, 0, 255), family);
-    }
-
-    public AprilTagProcessor(String name, ProcessorConfig cfg) {
-        this(name, cfg, new Scalar(0, 0, 255));
+    public AprilTagProcessor(String name, ProcessorConfig cfg, AprilTagFieldLayout field) {
+        this(name, cfg, new Scalar(0, 0, 255), new Scalar(255, 255, 0), field);
     }
 
     public AprilTagDetector getDetector() {
@@ -147,6 +139,11 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
 
     @Override
     protected Collection<VisionObject> processObjects(Mat img, CameraBase cam, Map<String, VisionProcessor> _deps) {
+        return null;
+    }
+
+    @Override
+    protected Collection<VisionObject> processObjects(Mat img, CameraBase cam, Map<String, VisionProcessor> _deps, Ref<State> state) {
         AprilTagDetection[] tags = new AprilTagDetection[0];
         Mat grayFrame = new Mat();
         switch (img.channels()) {
@@ -168,11 +165,39 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
             .map(obj -> new AprilTag(obj, cam.getConfig().transform.plus(estimator.estimate(obj))))
             .collect(Collectors.toList());
         seen.put(cam.getName(), tagCollection);
+        if (field != null) {
+            Quaternion first = null;
+            Quaternion avgRot = null;
+            Translation3d avgTrans = null;
+            double totalWeight = 0;
+            for (var tag : tagCollection) {
+                if (tag.pose != null) continue;
+                var basePose = field.getPose(tag.getId());
+                if (basePose == null) continue;
+                double w = confidence.weight(tag.pose);
+                var pose = basePose.transformBy(tag.pose.inverse());
+                var vec = pose.getTranslation().times(w);
+                var quat = pose.getRotation().getQuaternion().times(w);
+                if (first == null) {
+                    first = quat;
+                    avgRot = quat;
+                    avgTrans = vec.times(w);
+                } else {
+                    if (first.dot(quat) < 0) quat = quat.times(-1);
+                    avgRot = avgRot.plus(quat);
+                    avgTrans = vec.times(w);
+                }
+                totalWeight += w;
+            }
+            state.inner = new State();
+            state.inner.confidence = totalWeight;
+            if (totalWeight != 0) state.inner.pose = new Pose3d(avgTrans.div(totalWeight), new Rotation3d(avgRot.divide(totalWeight)));
+        }
         return tagCollection.stream().collect(Collectors.toList());
     }
 
     @Override
-    public void toNetworkTableStateful(NetworkTable table, Ref state) {
+    public void toNetworkTableStateful(NetworkTable table, Ref<ObjectVisionProcessor<State>.Storage> state) {
         super.toNetworkTableStateful(table, state);
         NetworkTable table_ = table.getSubTable(name);
         var value = table_.getValue("filter");
@@ -187,11 +212,11 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
                 for (int i = 0; i < vals.length; ++i) filter[i] = (long)vals[i];
                 break;
         }
-        int size = state.inner.size();
+        int size = state.inner.seen.size();
         long[] ids = new long[size];
         int i = 0;
         AprilTag best = null;
-        for (VisionObject obj : state.inner) {
+        for (VisionObject obj : state.inner.seen) {
             AprilTag tag = (AprilTag)obj;
             ids[i] = tag.getId();
             if (Arrays.stream(filter).anyMatch(f -> f == tag.getId())) {
@@ -200,24 +225,36 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
             ++i;
         }
         table_.putValue("ids", NetworkTableValue.makeIntegerArray(ids));
-        NetworkTable bestTable = table_.getSubTable("best");
+        if (state.inner.additional != null) {
+            var pose = state.inner.additional.pose;
+            table_.putValue("pose/confidence", NetworkTableValue.makeDouble(state.inner.additional.confidence));
+            if (pose != null) {
+                var rot = pose.getRotation();
+                table_.putValue("pose/x", NetworkTableValue.makeDouble(pose.getX()));
+                table_.putValue("pose/y", NetworkTableValue.makeDouble(pose.getY()));
+                table_.putValue("pose/z", NetworkTableValue.makeDouble(pose.getZ()));
+                table_.putValue("pose/roll",  NetworkTableValue.makeDouble(rot.getX()));
+                table_.putValue("pose/pitch", NetworkTableValue.makeDouble(rot.getY()));
+                table_.putValue("pose/yaw",   NetworkTableValue.makeDouble(rot.getZ()));
+            }
+        }
         if (best != null) {
-            bestTable.putValue("found", NetworkTableValue.makeBoolean(true));
-            bestTable.putValue("id", NetworkTableValue.makeInteger(best.getId()));
-            bestTable.putValue("d", NetworkTableValue.makeDouble(best.distance));
-            bestTable.putValue("a", NetworkTableValue.makeDouble(best.azimuth));
-            bestTable.putValue("e", NetworkTableValue.makeDouble(best.elevation));
-            bestTable.putValue("o", NetworkTableValue.makeDouble(best.offset));
-            bestTable.putValue("r", NetworkTableValue.makeDouble(best.rotation));
+            table_.putValue("best/found", NetworkTableValue.makeBoolean(true));
+            table_.putValue("best/id", NetworkTableValue.makeInteger(best.getId()));
+            table_.putValue("best/d", NetworkTableValue.makeDouble(best.distance));
+            table_.putValue("best/a", NetworkTableValue.makeDouble(best.azimuth));
+            table_.putValue("best/e", NetworkTableValue.makeDouble(best.elevation));
+            table_.putValue("best/o", NetworkTableValue.makeDouble(best.offset));
+            table_.putValue("best/r", NetworkTableValue.makeDouble(best.rotation));
         } else {
-            bestTable.putValue("found", NetworkTableValue.makeBoolean(false));
+            table_.putValue("best/found", NetworkTableValue.makeBoolean(false));
         }
     }
 
     @Override
-    public void drawOnImageStateful(Mat img, Ref state) {
+    public void drawOnImageStateful(Mat img, Ref<ObjectVisionProcessor<State>.Storage> state) {
         super.drawOnImageStateful(img, state);
-        for (VisionObject obj : state.inner) {
+        for (VisionObject obj : state.inner.seen) {
             AprilTagDetection tag = ((AprilTag)obj).found;
             Imgproc.polylines(
                 img,
@@ -246,37 +283,9 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         }
     }
 
-    /**
-     * Quickly average a set of transforms.
-     *
-     * The rotations are an element-wise average of the quaternions, which will lead to a significant error if they vary.
-     * Returns null for an empty input.
-     */
-    public static Transform3d fastAverageTransform(Iterable<Transform3d> trans, ToDoubleFunction<Transform3d> weight) {
-        Quaternion first = null;
-        Quaternion avgRot = null;
-        Translation3d avgTrans = null;
-        double totalWeight = 0;
-        for (var tr : trans) {
-            double w = weight.applyAsDouble(tr);
-            var vec = tr.getTranslation().times(w);
-            var quat = tr.getRotation().getQuaternion().times(w);
-            if (first == null) {
-                first = quat;
-                avgRot = quat;
-                avgTrans = vec.times(w);
-            } else {
-                if (first.dot(quat) < 0) quat = quat.times(-1);
-                avgRot = avgRot.plus(quat);
-                avgTrans = vec.times(w);
-            }
-            totalWeight += w;
-        }
-        return totalWeight != 0 ? new Transform3d(avgTrans.div(totalWeight), new Rotation3d(avgRot.divide(totalWeight))) : null;
-    }
-
     public static class Config extends ProcessorConfig {
         public ArrayList<String> family;
+        public String fieldLayout;
     }
     public static class Factory extends ProcessorFactory {
         @Override
@@ -289,8 +298,8 @@ public class AprilTagProcessor extends ObjectVisionProcessor {
         }
         @Override
         public AprilTagProcessor create(String name, ProcessorConfig cfg) {
-            AprilTagProcessor out = new AprilTagProcessor(name, cfg);
             Config cfg_ = (Config)cfg;
+            AprilTagProcessor out = new AprilTagProcessor(name, cfg, cfg_.fieldLayout == null ? null : AprilTagFieldLayout.get(cfg_.fieldLayout));
             if (cfg_.family != null) {
                 for (String family : cfg_.family) {
                     out.getDetector().addFamily(family);

@@ -89,7 +89,7 @@ public class TagAlignedColorZoneProcessor extends InstancedVisionProcessor<TagAl
     }
 
     @Override
-    protected synchronized void processStateful(Mat img, CameraBase cam, Map<String, VisionProcessor> deps, Ref state) {
+    protected synchronized void processStateful(Mat img, CameraBase cam, Map<String, VisionProcessor> deps, Ref<State> state) {
         Config cfg = getConfig();
 
         state.inner = new State();
@@ -129,7 +129,7 @@ public class TagAlignedColorZoneProcessor extends InstancedVisionProcessor<TagAl
     }
 
     @Override
-    protected void toNetworkTableStateful(NetworkTable table, Ref state) {
+    protected void toNetworkTableStateful(NetworkTable table, Ref<State> state) {
         if (state.inner == null) return;
         NetworkTable table_ = table.getSubTable(name);
         table_.putValue("filled", NetworkTableValue.makeIntegerArray(state.inner.filled.stream().mapToLong(x -> x.zone).toArray()));
@@ -137,7 +137,7 @@ public class TagAlignedColorZoneProcessor extends InstancedVisionProcessor<TagAl
     }
 
     @Override
-    protected synchronized void drawOnImageStateful(Mat img, Ref state) {
+    protected synchronized void drawOnImageStateful(Mat img, Ref<State> state) {
         if (state.inner == null) return;
         for (var z : state.inner.filled) drawZone(img, z, z.zone, new Scalar(0, 255, 0));
         for (var z : state.inner.empty) drawZone(img, z, z.zone, new Scalar(0, 0, 255));

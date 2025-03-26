@@ -10,7 +10,7 @@ import java.util.Map;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
-public class RectVisionProcessor extends ObjectVisionProcessor {
+public class RectVisionProcessor extends ObjectVisionProcessor<Void> {
     protected Config cfg;
 
     public RectVisionProcessor(String name, Config cfg) {

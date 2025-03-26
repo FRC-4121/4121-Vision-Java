@@ -10,8 +10,10 @@ import org.opencv.core.Mat;
 // This class maintaines an ConcurrentHashMap to keep the states separate for each object.
 public abstract class InstancedVisionProcessor<S> extends VisionProcessor {
     // A simple wrapper around the state to allow passing by reference.
-    protected class Ref {
+    protected static class Ref<S> {
         public S inner;
+        public Ref() {}
+        public Ref(S inner) { this.inner = inner; }
     }
 
     // The states for this processor.
@@ -23,17 +25,17 @@ public abstract class InstancedVisionProcessor<S> extends VisionProcessor {
     }
 
     // Process an image, but given a state instead of just a handle.
-    protected abstract void processStateful(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps, Ref state);
+    protected abstract void processStateful(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps, Ref<S> state);
 
     // Write data to a network table, but given a state instead of just a handle.
-    protected abstract void toNetworkTableStateful(NetworkTable table, Ref state);
+    protected abstract void toNetworkTableStateful(NetworkTable table, Ref<S> state);
 
     // Draw on an image, but given a state instead of just a handle.
-    protected abstract void drawOnImageStateful(Mat img, Ref state);
+    protected abstract void drawOnImageStateful(Mat img, Ref<S> state);
 
     @Override
     public void process(Mat img, CameraBase handle, Map<String, VisionProcessor> deps) {
-        Ref state = states.putIfAbsent(handle, new Ref());
+        Ref state = states.putIfAbsent(handle, new Ref<>());
         if (state == null) state = states.get(handle);
         processStateful(img, handle, deps, state);
     }

@@ -8,9 +8,17 @@ import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 // Most vision processors find some kind of bounding rectangle around their objects.
-public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Collection<VisionObject>> {
+public abstract class ObjectVisionProcessor<A> extends InstancedVisionProcessor<ObjectVisionProcessor<A>.Storage> {
+    protected class Storage {
+        Collection<VisionObject> seen;
+        A additional;
+    }
+
     public Scalar rectColor;
     protected boolean calcAngles;
+
+    // Sentinel exception for processors that need state
+    public static class NeedsState extends RuntimeException {}
 
     protected ObjectVisionProcessor(String name, ProcessorConfig cfg) {
         this(name, cfg, new Scalar(1.0, 0.0, 0.0));
@@ -20,26 +28,36 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
         rectColor = color;
     }
 
-    // Process the input image into a list of objects
+    // Process the input image into a list of objects, or return null if we need more state
     protected abstract Collection<VisionObject> processObjects(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps);
-
-    @Override
-    public void processStateful(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps, Ref state) {
-        state.inner = processObjects(img, cfg, deps);
-        if (calcAngles) state.inner.forEach(obj -> obj.calcAngles(cfg.getConfig()));
+    // Process the input image into a list of objects, with additional state
+    protected Collection<VisionObject> processObjects(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps, Ref<A> state) {
+        return processObjects(img, cfg, deps);
     }
 
     @Override
-    public void toNetworkTableStateful(NetworkTable table, Ref state) {
+    public void processStateful(Mat img, CameraBase cfg, Map<String, VisionProcessor> deps, Ref<Storage> state) {
+        if (state.inner == null) state.inner = new Storage();
+        state.inner.seen = processObjects(img, cfg, deps);
+        if (state.inner.seen == null) {
+            var r = new Ref<>(state.inner.additional);
+            state.inner.seen = processObjects(img, cfg, deps, r);
+            state.inner.additional = r.inner;
+        }
+        if (calcAngles) state.inner.seen.forEach(obj -> obj.calcAngles(cfg.getConfig()));
+    }
+
+    @Override
+    public void toNetworkTableStateful(NetworkTable table, Ref<Storage> state) {
         NetworkTable table_ = table.getSubTable(name);
         int i = 0;
-        int size = state.inner.size();
+        int size = state.inner.seen.size();
         double[] a = new double[size];
         double[] e = new double[size];
         double[] d = new double[size];
         double[] r = new double[size];
         double[] o = new double[size];
-        for (VisionObject obj : state.inner) {
+        for (VisionObject obj : state.inner.seen) {
             a[i] = obj.azimuth;
             e[i] = obj.elevation;
             d[i] = obj.distance;
@@ -57,8 +75,8 @@ public abstract class ObjectVisionProcessor extends InstancedVisionProcessor<Col
     }
 
     @Override
-    public void drawOnImageStateful(Mat img, Ref state) {
-        for (VisionObject obj : state.inner) {
+    public void drawOnImageStateful(Mat img, Ref<Storage> state) {
+        for (VisionObject obj : state.inner.seen) {
             Imgproc.rectangle(img, obj.tl(), obj.br(), rectColor, 2);
             if (obj.hasAngles) {
                 double x = obj.br().x;
