@@ -1,7 +1,6 @@
 package frc.vision.camera;
 
 import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 
 public class StreamConfig {
@@ -40,7 +39,7 @@ public class StreamConfig {
                     return out;
                 }
             }
-            Shim sh = context.deserialize(json, new TypeToken<Shim>() {}.getType());
+            Shim sh = context.deserialize(json, Shim.class);
             out.port = sh.port;
             out.address = sh.address;
             out.name = sh.name;
