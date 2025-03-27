@@ -290,10 +290,21 @@ public class VisionMain {
                 nt.setServer(serverAddress);
                 nt.startClient3(name);
                 table = nt.getTable(name);
+                var entry = table.getEntry("heartbeat");
+                var heartbeat = new Thread(() -> {
+                    long val = 0;
+                    while (true) {
+                        if (entry.getType() == NetworkTableType.kDouble) entry.setDouble(val++);
+                        else entry.setInteger(val++);
+                        try {
+                            Thread.sleep(500);
+                        } catch (Exception e) {}
+                    }
+                });
             }
 
             VisionLibsGroup procs = new VisionLibsGroup(
-                ProcessorLoader.loadAll("fps", "april", "ring2024", "algae2025", "coral2025"),
+                ProcessorLoader.loadAll("fps", "april", "algae2025", "coral2025"),
                 table, visionDebug, exec
             );
 

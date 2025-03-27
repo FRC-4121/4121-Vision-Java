@@ -22,6 +22,8 @@ public class AprilTagProcessor extends ObjectVisionProcessor<AprilTagProcessor.S
         double confidence;
     }
 
+    private static final Transform3d coordinateConversion = new Transform3d(0, 0, 0, new Rotation3d(-Math.PI / 2, -Math.PI / 2, 0));
+
     protected AprilTagDetector detector;
     protected Scalar tagColor;
     protected AprilTagFieldLayout field;
@@ -34,7 +36,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor<AprilTagProcessor.S
 
         static Confidence distRecip() {
             return transform -> {
-                double len = transform.getTranslation().toVector().norm();
+                double len = transform.getTranslation().getNorm();
                 return len == 0 ? 0 : 1 / len;
             };
         }
@@ -162,7 +164,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor<AprilTagProcessor.S
         // unlike the detector, the estimator seems to just be a wrapper around the config
         AprilTagPoseEstimator estimator = new AprilTagPoseEstimator(cam.getConfig().poseConfig());
         Collection<AprilTag> tagCollection = Arrays.stream(tags)
-            .map(obj -> new AprilTag(obj, cam.getConfig().transform.plus(estimator.estimate(obj))))
+            .map(obj -> new AprilTag(obj, cam.getConfig().transform.inverse().plus(estimator.estimate(obj))))
             .collect(Collectors.toList());
         seen.put(cam.getName(), tagCollection);
         if (field != null) {
@@ -171,11 +173,19 @@ public class AprilTagProcessor extends ObjectVisionProcessor<AprilTagProcessor.S
             Translation3d avgTrans = null;
             double totalWeight = 0;
             for (var tag : tagCollection) {
-                if (tag.pose != null) continue;
+                if (tag.pose == null) continue;
                 var basePose = field.getPose(tag.getId());
-                if (basePose == null) continue;
+                if (basePose == null) {
+                    System.out.println(1);
+                    continue;
+                }
                 double w = confidence.weight(tag.pose);
-                var pose = basePose.transformBy(tag.pose.inverse());
+                if (w == 0) {
+                    System.out.println(2);
+                    continue;
+                }
+                var pose = basePose.transformBy(tag.pose.inverse().plus(coordinateConversion));
+                System.out.println(pose.getTranslation());
                 var vec = pose.getTranslation().times(w);
                 var quat = pose.getRotation().getQuaternion().times(w);
                 if (first == null) {
@@ -185,7 +195,7 @@ public class AprilTagProcessor extends ObjectVisionProcessor<AprilTagProcessor.S
                 } else {
                     if (first.dot(quat) < 0) quat = quat.times(-1);
                     avgRot = avgRot.plus(quat);
-                    avgTrans = vec.times(w);
+                    avgTrans = avgTrans.plus(vec.times(w));
                 }
                 totalWeight += w;
             }
@@ -240,7 +250,11 @@ public class AprilTagProcessor extends ObjectVisionProcessor<AprilTagProcessor.S
         }
         if (best != null) {
             table_.putValue("best/found", NetworkTableValue.makeBoolean(true));
-            table_.putValue("best/id", NetworkTableValue.makeInteger(best.getId()));
+            {
+                var entry = table_.getEntry("best/id");
+                if (entry.getType() == NetworkTableType.kDouble) entry.setDouble(best.getId());
+                else entry.setInteger(best.getId());
+            }
             table_.putValue("best/d", NetworkTableValue.makeDouble(best.distance));
             table_.putValue("best/a", NetworkTableValue.makeDouble(best.azimuth));
             table_.putValue("best/e", NetworkTableValue.makeDouble(best.elevation));

@@ -38,7 +38,9 @@ public class VideoCaptureCamera extends CameraBase {
         } else if (cfg.port != null) {
             String path = cfg.port.resolve();
             if (path == null) {
-                log.write(String.format("Couldn't find a camera on port %s\n", cfg.port));
+                String msg = String.format("Couldn't find a camera on port %s\n", cfg.port);
+                log.write(msg);
+                System.err.print(msg);
             } else {
                 cap = new VideoCapture(path, Videoio.CAP_V4L2);
             }
@@ -72,7 +74,9 @@ public class VideoCaptureCamera extends CameraBase {
                 try {
                     String path = cfg.port.resolve();
                     if (path == null) {
-                        log.write(String.format("Couldn't find a camera on port %s\n", cfg.port));
+                        String msg = String.format("Couldn't find a camera on port %s\n", cfg.port);
+                        log.write(msg);
+                        System.err.print(msg);
                     } else {
                         cap = new VideoCapture(path, Videoio.CAP_V4L2);
                     }

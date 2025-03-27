@@ -85,6 +85,7 @@ public class CameraLoader {
     // TODO: give better exceptions.
     public static CameraBase load(String name, LocalDateTime date) throws IOException {
         WrappedConfig wcfg = configs.get(name);
+        if (wcfg == null) throw new RuntimeException("Can't find a camera with name \"" + name + "\"");
         CameraConfig cfg = wcfg.inner;
         CameraFactory factory = types.get(cfg.type);
         return factory.create(name, cfg, date);

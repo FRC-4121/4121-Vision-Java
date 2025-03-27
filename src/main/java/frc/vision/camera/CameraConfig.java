@@ -45,6 +45,6 @@ public class CameraConfig extends Typed {
     }
     public AprilTagPoseEstimator.Config poseConfig() {
         float f = 0.5f / (float)Math.tan(fov * Math.PI / 360) * width;
-        return new AprilTagPoseEstimator.Config(6.5, f, f, width / 2, height / 2);
+        return new AprilTagPoseEstimator.Config(0.1651, f, f, width / 2, height / 2);
     }
 }

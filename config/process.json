@@ -6,25 +6,13 @@
     },
     "april": {
         "type": "apriltag",
+        "fieldLayout": "2025-reefscape-filtered",
         "family": ["tag36h11"]
-    },
-    "ring2024": {
-        "type": "rect",
-        "height": 2.8,
-        "width": 14,
-        "tolerance": 0,
-        "hmin": 0,
-        "hmax": 14,
-        "smin": 180,
-        "smax": 255,
-        "vmin": 87,
-        "vmax": 255,
-        "minArea": 200
     },
     "algae2025": {
        "type": "rect",
-       "height": 16,
-       "width": 16,
+       "height": 0.4064,
+       "width": 0.4064,
        "tolerance": 0.1,
        "hmin": 67,
        "hmax": 99,

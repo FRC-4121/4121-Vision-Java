@@ -68,6 +68,7 @@ public class ProcessorLoader {
     // TODO: give better exceptions.
     public static VisionProcessor load(String name) {
         WrappedConfig wcfg = configs.get(name);
+        if (wcfg == null) throw new RuntimeException("Can't find a processor with name \"" + name + "\"");
         ProcessorConfig cfg = wcfg.inner;
         ProcessorFactory factory = types.get(cfg.type);
         return factory.create(name, cfg);
